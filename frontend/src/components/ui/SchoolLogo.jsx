@@ -7,8 +7,7 @@ const SchoolLogo = ({ className = "w-16 h-16", showText = false }) => {
       <img
         src={schoolLogo}
         alt="Little Flower English School Logo"
-        className={className}
-        style={{ objectFit: "contain" }}
+        className={`${className} rounded-full object-cover border border-gray-100 shadow-sm`}
       />
       {showText && (
         <div className="flex flex-col">
