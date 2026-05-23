@@ -42,19 +42,36 @@ const generateFeeReceipt = async (data) => {
     doc.pipe(stream);
 
     // --- Header ---
-    doc.fillColor('#444444')
-       .fontSize(20)
-       .text('LBS SCHOOL ERP', 110, 57)
-       .fontSize(10)
-       .text('123 Education Lane, Academic City', 200, 65, { align: 'right' })
-       .text('City, State, 123456', 200, 80, { align: 'right' })
-       .moveDown();
+    const logoPath = path.join(__dirname, '../assets/schoollogo.png');
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 50, 45, { width: 45, height: 45 });
+      
+      doc.fillColor('#1e293b')
+         .fontSize(14)
+         .font('Helvetica-Bold')
+         .text('LITTLE FLOWER ENGLISH SCHOOL', 110, 50)
+         .fontSize(8)
+         .font('Helvetica')
+         .fillColor('#64748b')
+         .text('Meerut Road, Little Flower Campus, Siwan, Bihar, India', 110, 68)
+         .text('Email: contact@littleflowerschool.edu.in | Web: www.littleflowerschool.edu.in', 110, 80);
+    } else {
+      doc.fillColor('#444444')
+         .fontSize(16)
+         .font('Helvetica-Bold')
+         .text('LITTLE FLOWER ENGLISH SCHOOL ERP', 50, 57)
+         .fontSize(10)
+         .font('Helvetica')
+         .text('Meerut Road, Little Flower Campus', 200, 65, { align: 'right' })
+         .text('Siwan, Bihar, India', 200, 80, { align: 'right' });
+    }
+    doc.moveDown();
 
     // Line separator
-    doc.strokeColor('#aaaaaa')
+    doc.strokeColor('#e2e8f0')
        .lineWidth(1)
-       .moveTo(50, 100)
-       .lineTo(550, 100)
+       .moveTo(50, 105)
+       .lineTo(550, 105)
        .stroke();
 
     // --- Receipt Info ---

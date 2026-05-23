@@ -10,7 +10,7 @@ const testDownload = async () => {
         
         // 1. Login to get token
         const loginRes = await axios.post(`${baseURL}/auth/login`, {
-            email: 'admin@lbs.com',
+            email: 'admin@lfes.com',
             password: 'password123'
         });
         const token = loginRes.data.token;

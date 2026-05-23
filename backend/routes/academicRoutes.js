@@ -5,7 +5,7 @@ const { protect, isAdmin } = require('../middleware/auth');
 
 // Apply protection and Admin check to all academic routes
 router.use(protect);
-router.use(isAdmin);
+router.use(isAdmin); 
 
 // --- Subject Routes ---
 router.post('/subjects', academicController.createSubject);

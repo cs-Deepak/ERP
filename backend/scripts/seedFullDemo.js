@@ -24,19 +24,19 @@ const seedFullDemo = async () => {
 
     // 1. Admin
     const adminUser = await User.create({
-      name: 'LBS Administrator',
-      email: 'admin@lbs.com',
+      name: 'Little Flower Administrator',
+      email: 'admin@lfes.com',
       password: 'password123',
       role: 'admin',
     });
 
     // 2. Teachers
     const teacherData = [
-      { name: 'Dr. Ramesh Kumar', email: 'ramesh@lbs.com', subject: 'Mathematics' },
-      { name: 'Mrs. Sunita Sharma', email: 'sunita@lbs.com', subject: 'English' },
-      { name: 'Mr. Arvind Singh', email: 'arvind@lbs.com', subject: 'Science' },
-      { name: 'Ms. Priya Verma', email: 'priya@lbs.com', subject: 'History' },
-      { name: 'Mr. Rajesh Khanna', email: 'rajesh@lbs.com', subject: 'Computers' },
+      { name: 'Dr. Ramesh Kumar', email: 'ramesh@lfes.com', subject: 'Mathematics' },
+      { name: 'Mrs. Sunita Sharma', email: 'sunita@lfes.com', subject: 'English' },
+      { name: 'Mr. Arvind Singh', email: 'arvind@lfes.com', subject: 'Science' },
+      { name: 'Ms. Priya Verma', email: 'priya@lfes.com', subject: 'History' },
+      { name: 'Mr. Rajesh Khanna', email: 'rajesh@lfes.com', subject: 'Computers' },
     ];
 
     const teachers = [];
@@ -87,7 +87,7 @@ const seedFullDemo = async () => {
         const student = await Student.create({
             firstName: fName,
             lastName: lName,
-            email: `${fName.toLowerCase()}${i}@lbs.com`,
+            email: `${fName.toLowerCase()}${i}@lfes.com`,
             grade: cls.name.split('-')[0],
             class: cls._id,
             rollNumber: (100 + i).toString(),
@@ -109,7 +109,9 @@ const seedFullDemo = async () => {
                 paymentDate: new Date(),
                 dueDate: new Date(),
                 transactionId: `TXN-ADM-${i}`,
-                receiptNumber: `REC-ADM-${i}`
+                receiptNumber: `REC-ADM-${i}`,
+                month: 'April',
+                academicYear: '2025-26'
             },
             {
                 student: student._id,
@@ -117,6 +119,8 @@ const seedFullDemo = async () => {
                 type: 'Tuition Fee',
                 status: 'Pending',
                 dueDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+                month: 'May',
+                academicYear: '2025-26'
             }
         ]);
     }

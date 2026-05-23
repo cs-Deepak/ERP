@@ -2,7 +2,7 @@ const http = require('http');
 
 const makeRequest = (method, path) => {
   return new Promise((resolve, reject) => {
-    const data = JSON.stringify({ email: 'admin@lbs.com', password: 'password123' });
+    const data = JSON.stringify({ email: 'admin@lfes.com', password: 'password123' });
     const req = http.request(
       { hostname: 'localhost', port: 5000, path: '/api/auth/login', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': data.length } },
       res => {

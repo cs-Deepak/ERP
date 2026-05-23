@@ -40,12 +40,12 @@ const cleanupData = async () => {
     // 3. Recreate Default Admin
     // This ensures the user can still log in after cleanup
     const adminUser = await User.create({
-      name: 'LBS Administrator',
-      email: 'admin@lbs.com',
+      name: 'Little Flower Administrator',
+      email: 'admin@lfes.com',
       password: 'password123',
       role: 'admin',
     });
-    console.log('Recreated default admin: admin@lbs.com / password123');
+    console.log('Recreated default admin: admin@lfes.com / password123');
 
     console.log('Cleanup complete. System is fresh!');
     process.exit(0);

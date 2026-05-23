@@ -14,6 +14,7 @@ import { cn } from "../../utils/cn";
 import { formatToINR } from "../../utils/format";
 import { useToast } from "../../context/ToastContext";
 import api from "../../services/api";
+import SchoolLogo from "./SchoolLogo";
 
 const ReceiptPreview = ({ transaction, student, className }) => {
   const { addToast } = useToast();
@@ -65,7 +66,7 @@ const ReceiptPreview = ({ transaction, student, className }) => {
         </div>
         <h4 className="text-xl font-black text-gray-900">Payment Received</h4>
         <p className="text-xs text-gray-500 font-medium">
-          LBS School Digital Ledger Entry #{" "}
+          Little Flower English School Digital Ledger Entry #{" "}
           {transaction.id.split("-")[1] || "NEW"}
         </p>
       </div>
@@ -83,19 +84,17 @@ const ReceiptPreview = ({ transaction, student, className }) => {
         {/* School Header */}
         <div className="flex flex-col md:flex-row justify-between items-start border-b border-gray-100 pb-8 gap-4 relative">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-indigo-100">
-              L
-            </div>
+            <SchoolLogo className="w-14 h-14" />
             <div>
               <h2 className="text-xl font-black text-gray-900 tracking-tight">
-                LBS PUBLIC SCHOOL
+                LITTLE FLOWER ENGLISH SCHOOL
               </h2>
               <div className="flex flex-col text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
                 <span className="flex items-center gap-1">
-                  <MapPin size={10} /> Meerut Road, LBS Campus
+                  <MapPin size={10} /> Meerut Road, Little Flower Campus
                 </span>
                 <span className="flex items-center gap-1">
-                  <Globe size={10} /> www.lbsschool.edu.in
+                  <Globe size={10} /> www.littleflowerschool.edu.in
                 </span>
               </div>
             </div>

@@ -8,7 +8,7 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'LBS School ERP API Documentation',
+      title: 'Little Flower English School ERP API Documentation',
       version: '1.0.0',
       description: 'API documentation for the School ERP backend system.',
     },

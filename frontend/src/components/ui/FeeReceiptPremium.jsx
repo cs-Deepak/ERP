@@ -18,6 +18,7 @@ import { formatToINR } from "../../utils/format";
 import Button from "./Button";
 import { useToast } from "../../context/ToastContext";
 import api from "../../services/api";
+import SchoolLogo from "./SchoolLogo";
 
 const FeeReceiptPremium = ({ transaction, student, onDownload }) => {
   const { addToast } = useToast();
@@ -66,13 +67,8 @@ const FeeReceiptPremium = ({ transaction, student, onDownload }) => {
     <div className="max-w-md mx-auto bg-[#F8FAFC] min-h-screen pb-10 flex flex-col font-sans">
       {/* 1. Header Section */}
       <div className="bg-white px-6 py-6 border-b border-gray-100 flex flex-col items-center">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
-            <School size={24} />
-          </div>
-          <h1 className="text-xl font-bold text-[#1E293B]">
-            LBS Public School
-          </h1>
+        <div className="flex items-center justify-center mb-2">
+          <SchoolLogo className="w-12 h-12" showText={true} />
         </div>
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
           Fee Payment Receipt
@@ -99,7 +95,7 @@ const FeeReceiptPremium = ({ transaction, student, onDownload }) => {
             <DetailItem label="Roll Number" value={transaction.roll} />
             <DetailItem
               label="Admission No"
-              value={`LBS${transaction.roll}X`}
+              value={`LFES${transaction.roll}X`}
             />
           </div>
         </div>

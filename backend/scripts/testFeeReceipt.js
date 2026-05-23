@@ -38,6 +38,7 @@ const testReceipt = async () => {
     }
 
     // 3. Create a mock transaction
+    await FeeTransaction.deleteMany({ receiptNumber: 'SCH-2026-TEST-001' });
     const transaction = await FeeTransaction.create({
         student: student._id,
         amount: 125000, // Testing Lakhs
@@ -46,7 +47,9 @@ const testReceipt = async () => {
         paymentDate: new Date(),
         dueDate: new Date(),
         receiptNumber: 'SCH-2026-TEST-001',
-        remarks: 'Test receipt generation'
+        remarks: 'Test receipt generation',
+        academicYear: '2026-2027',
+        month: 'May'
     });
 
     console.log('Created mock transaction:', transaction.receiptNumber);

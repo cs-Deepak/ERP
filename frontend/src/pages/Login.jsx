@@ -15,6 +15,7 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { useAuth } from "../context/AuthContext";
 import { cn } from "../utils/cn";
+import SchoolLogo from "../components/ui/SchoolLogo";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -52,12 +53,12 @@ const Login = () => {
       <div className="w-full max-w-md space-y-8">
         {/* Logo & Branding */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-indigo-600 rounded-[2rem] shadow-2xl shadow-indigo-100 mb-2">
-            <School className="text-white" size={40} />
+          <div className="flex justify-center mb-2 animate-bounce-subtle">
+            <SchoolLogo className="w-24 h-24 filter drop-shadow-xl" />
           </div>
           <div className="space-y-1">
             <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-              LBS Portal
+              Little Flower English School Portal
             </h1>
             <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">
               Secure Educational Enterprise
@@ -112,7 +113,7 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
               label="User Email"
-              placeholder="name@lbs-school.com"
+              placeholder="name@littleflowerschool.edu.in"
               type="email"
               icon={Mail}
               value={email}
@@ -185,7 +186,7 @@ const Login = () => {
         {/* Footer Info */}
         <div className="text-center space-y-2">
           <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">
-            © 2026 LBS Educational Group
+            © 2026 Little Flower Educational Group
           </p>
           <div className="flex items-center justify-center gap-4 text-[9px] font-bold text-gray-300 uppercase tracking-widest">
             <a href="#" className="hover:text-indigo-400 transition-colors">

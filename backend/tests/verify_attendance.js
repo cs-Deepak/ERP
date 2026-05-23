@@ -26,7 +26,7 @@ const testAttendance = async () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                email: 'sarah@lbs.com',
+                email: 'sarah@lfes.com',
                 password: 'password123'
             })
         });
@@ -34,7 +34,7 @@ const testAttendance = async () => {
         const teacherToken = teacherLoginData.data?.token;
 
         if (!teacherToken) {
-            log('Teacher login failed. Make sure sarah@lbs.com exists.');
+            log('Teacher login failed. Make sure sarah@lfes.com exists.');
             return;
         }
         log('Teacher logged in.');
@@ -57,7 +57,7 @@ const testAttendance = async () => {
             const adminLogin = await fetch(`${BASE_URL}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: 'admin@lbs.com', password: 'password123' })
+                body: JSON.stringify({ email: 'admin@lfes.com', password: 'password123' })
             });
             const adminLoginData = await adminLogin.json();
             adminToken = adminLoginData.data?.token;

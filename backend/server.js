@@ -1,5 +1,5 @@
 /**
- * LBS School ERP — Server Entry Point
+ * Little Flower English School ERP — Server Entry Point
  */
 
 require('dotenv').config();

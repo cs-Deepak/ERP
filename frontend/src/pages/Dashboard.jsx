@@ -16,6 +16,7 @@ import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
 const AdminDashboard = () => {
+  const { user } = useAuth();
   const [stats, setStats] = useState([
     {
       label: "Total Students",

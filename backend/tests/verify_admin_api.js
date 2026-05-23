@@ -34,7 +34,7 @@ const testAdminAPI = async () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                email: 'admin@lbs.com',
+                email: 'admin@lfes.com',
                 password: 'password123'
             })
         });
@@ -42,7 +42,7 @@ const testAdminAPI = async () => {
         const adminToken = adminLoginData.data?.token;
 
         if (!adminToken) {
-            log('Admin login failed. Make sure server is running and admin@lbs.com exists.');
+            log('Admin login failed. Make sure server is running and admin@lfes.com exists.');
             return;
         }
         log('Admin logged in.');
@@ -75,13 +75,13 @@ const testAdminAPI = async () => {
             body: JSON.stringify({
                 user: {
                     name: 'Sarah Teacher',
-                    email: 'sarah@lbs.com',
+                    email: 'sarah@lfes.com',
                     password: 'password123'
                 },
                 teacher: {
                     firstName: 'Sarah',
                     lastName: 'Teacher',
-                    email: 'sarah@lbs.com',
+                    email: 'sarah@lfes.com',
                     phone: '1234567890',
                     subject: 'Mathematics'
                 }

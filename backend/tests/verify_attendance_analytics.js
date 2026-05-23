@@ -2,7 +2,7 @@ const http = require('http');
 
 const login = () => {
   return new Promise((resolve, reject) => {
-    const data = JSON.stringify({ email: 'admin@lbs.com', password: 'password123' });
+    const data = JSON.stringify({ email: 'admin@lfes.com', password: 'password123' });
     const req = http.request(
       {
         hostname: 'localhost',

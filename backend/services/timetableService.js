@@ -210,9 +210,9 @@ exports.generateTimetablePDF = async (classId, outStream) => {
   doc.pipe(outStream);
 
   // 1. Institute Header
-  doc.fillColor('#1a365d').fontSize(24).text('LBS PUBLIC SCHOOL', { align: 'center', weight: 'bold' });
+  doc.fillColor('#1a365d').fontSize(24).text('LITTLE FLOWER ENGLISH SCHOOL', { align: 'center', weight: 'bold' });
   doc.fontSize(10).fillColor('#4a5568').text('Quality Education for a Brighter Future', { align: 'center' });
-  doc.text('Contact: +91 1234567890 | Email: contact@lbsschool.edu', { align: 'center' });
+  doc.text('Contact: +91 9876543210 | Email: contact@littleflowerschool.edu.in', { align: 'center' });
   doc.moveDown(1);
   
   // 2. Timetable Title

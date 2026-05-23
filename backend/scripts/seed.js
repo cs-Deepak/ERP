@@ -27,15 +27,15 @@ const seedData = async () => {
     // 3. Create Users (Admin and Teachers)
     const adminUser = await User.create({
       name: 'Super Admin',
-      email: 'admin@lbs.com',
+      email: 'admin@lfes.com',
       password: 'password123',
       role: 'admin',
     });
 
     const teacherUsers = await User.create([
-      { name: 'Dr. Ramesh Kumar', email: 'ramesh@lbs.com', password: 'password123', role: 'teacher' },
-      { name: 'Dr. Sunita Sharma', email: 'sunita@lbs.com', password: 'password123', role: 'teacher' },
-      { name: 'Mr. Arvind Singh', email: 'arvind@lbs.com', password: 'password123', role: 'teacher' },
+      { name: 'Dr. Ramesh Kumar', email: 'ramesh@lfes.com', password: 'password123', role: 'teacher' },
+      { name: 'Dr. Sunita Sharma', email: 'sunita@lfes.com', password: 'password123', role: 'teacher' },
+      { name: 'Mr. Arvind Singh', email: 'arvind@lfes.com', password: 'password123', role: 'teacher' },
     ]);
 
     // 4. Create Teachers Profiles
@@ -43,7 +43,7 @@ const seedData = async () => {
       {
         firstName: 'Ramesh',
         lastName: 'Kumar',
-        email: 'ramesh@lbs.com',
+        email: 'ramesh@lfes.com',
         phone: '9876543210',
         subject: 'Mathematics',
         qualification: 'PhD in Mathematics',
@@ -52,7 +52,7 @@ const seedData = async () => {
       {
         firstName: 'Sunita',
         lastName: 'Sharma',
-        email: 'sunita@lbs.com',
+        email: 'sunita@lfes.com',
         phone: '9876543211',
         subject: 'Physics',
         qualification: 'MSc Physics',
@@ -61,7 +61,7 @@ const seedData = async () => {
       {
         firstName: 'Arvind',
         lastName: 'Singh',
-        email: 'arvind@lbs.com',
+        email: 'arvind@lfes.com',
         phone: '9876543212',
         subject: 'Hindi',
         qualification: 'MA Hindi',
@@ -109,10 +109,10 @@ const seedData = async () => {
 
     // 7. Create Fee Transactions
     await FeeTransaction.create([
-      { student: students[0]._id, amount: 15000, type: 'Tuition', status: 'Paid', paymentDate: new Date(), dueDate: new Date(), transactionId: 'TXN-001', receiptNumber: 'LBS-2026-001' },
-      { student: students[1]._id, amount: 25000, type: 'Tuition', status: 'Paid', paymentDate: new Date(), dueDate: new Date(), transactionId: 'TXN-002', receiptNumber: 'LBS-2026-002' },
-      { student: students[2]._id, amount: 10000, type: 'Tuition', status: 'Pending', dueDate: new Date() },
-      { student: students[5]._id, amount: 32000, type: 'Tuition', status: 'Paid', paymentDate: new Date(), dueDate: new Date(), transactionId: 'TXN-003', receiptNumber: 'LBS-2026-003' },
+      { student: students[0]._id, amount: 15000, type: 'Tuition', status: 'Paid', paymentDate: new Date(), dueDate: new Date(), transactionId: 'TXN-001', receiptNumber: 'LFES-2026-001', month: 'April', academicYear: '2025-26' },
+      { student: students[1]._id, amount: 25000, type: 'Tuition', status: 'Paid', paymentDate: new Date(), dueDate: new Date(), transactionId: 'TXN-002', receiptNumber: 'LFES-2026-002', month: 'April', academicYear: '2025-26' },
+      { student: students[2]._id, amount: 10000, type: 'Tuition', status: 'Pending', dueDate: new Date(), month: 'April', academicYear: '2025-26' },
+      { student: students[5]._id, amount: 32000, type: 'Tuition', status: 'Paid', paymentDate: new Date(), dueDate: new Date(), transactionId: 'TXN-003', receiptNumber: 'LFES-2026-003', month: 'April', academicYear: '2025-26' },
     ]);
 
     // 8. Create Attendance (Today)

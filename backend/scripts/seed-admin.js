@@ -9,17 +9,17 @@ const seedAdmin = async () => {
     console.log('Connected to MongoDB...');
     
     // Delete if already exists (cleanup)
-    await User.deleteOne({ email: 'admin@lbs.com' });
+    await User.deleteOne({ email: 'admin@lfes.com' });
     
     const admin = await User.create({
-      name: 'LBS School Administrator',
-      email: 'admin@lbs.com',
+      name: 'Little Flower School Administrator',
+      email: 'admin@lfes.com',
       password: 'password123',
       role: 'admin',
     });
     
     console.log('Admin user created successfully!');
-    console.log('Email: admin@lbs.com');
+    console.log('Email: admin@lfes.com');
     console.log('Password: password123');
     
     process.exit(0);

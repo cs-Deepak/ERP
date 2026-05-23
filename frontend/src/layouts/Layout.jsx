@@ -21,6 +21,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 import { cn } from "../utils/cn";
+import SchoolLogo from "../components/ui/SchoolLogo";
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -148,16 +149,7 @@ const Layout = ({ children }) => {
               !isSidebarOpen && "md:justify-center w-full",
             )}
           >
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-100">
-              <span className="text-white font-bold text-xl uppercase tracking-tighter">
-                L
-              </span>
-            </div>
-            {(isSidebarOpen || isMobileMenuOpen) && (
-              <span className="font-bold text-lg text-gray-800 tracking-tight whitespace-nowrap">
-                LBS School
-              </span>
-            )}
+            <SchoolLogo className="w-8 h-8 flex-shrink-0" showText={isSidebarOpen || isMobileMenuOpen} />
           </div>
           {isMobileMenuOpen && (
             <button
@@ -237,7 +229,7 @@ const Layout = ({ children }) => {
                   "Dashboard"}
               </h1>
               <p className="hidden sm:block text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none mt-1">
-                LBS Educational Enterprise
+                Little Flower Educational Enterprise
               </p>
             </div>
           </div>

@@ -183,16 +183,27 @@ class FeeService {
     doc.pipe(outStream);
 
     // 1. Official Header
-    doc.fillColor('#1e3a8a').fontSize(24).text('LBS PUBLIC SCHOOL', { align: 'center', weight: 'bold' });
-    doc.fontSize(10).fillColor('#4b5563').text('Meerut Road, LBS Campus, Uttar Pradesh, India', { align: 'center' });
-    doc.text('Website: www.lbsschool.edu.in | Email: contact@lbsschool.edu.in', { align: 'center' });
-    doc.moveDown(1);
+    const fs = require('fs');
+    const path = require('path');
+    const logoPath = path.join(__dirname, '../assets/schoollogo.png');
+    
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 40, 35, { width: 45, height: 45 });
+      doc.fillColor('#1e3a8a').fontSize(18).text('LITTLE FLOWER ENGLISH SCHOOL', 100, 40, { weight: 'bold' });
+      doc.fontSize(9).fillColor('#4b5563').text('Meerut Road, Little Flower Campus, Uttar Pradesh, India', 100, 58);
+      doc.fontSize(8).text('Website: www.littleflowerschool.edu.in | Email: contact@littleflowerschool.edu.in', 100, 70);
+      doc.y = 85;
+    } else {
+      doc.fillColor('#1e3a8a').fontSize(24).text('LITTLE FLOWER ENGLISH SCHOOL', { align: 'center', weight: 'bold' });
+      doc.fontSize(10).fillColor('#4b5563').text('Meerut Road, Little Flower Campus, Uttar Pradesh, India', { align: 'center' });
+      doc.text('Website: www.littleflowerschool.edu.in | Email: contact@littleflowerschool.edu.in', { align: 'center' });
+    }
     
     // Draw horizontal line
-    doc.moveTo(40, 105).lineTo(555, 105).stroke('#e5e7eb');
-    doc.moveDown(1.5);
+    doc.moveTo(40, 95).lineTo(555, 95).stroke('#e5e7eb');
 
     // 2. Receipt Identification
+    doc.y = 110;
     doc.fillColor('#111827').fontSize(16).text('FEE COLLECTION RECEIPT', { align: 'center', weight: 'bold' });
     doc.moveDown(1);
 
@@ -213,7 +224,7 @@ class FeeService {
 
     const studentY = doc.y;
     doc.fillColor('#4b5563').text('ID Number:', 50, studentY);
-    doc.fillColor('#111827').text(`LBS-${transaction.student.rollNumber}`, 150, studentY);
+    doc.fillColor('#111827').text(`LFES-${transaction.student.rollNumber}`, 150, studentY);
     
     doc.fillColor('#4b5563').text('Full Name:', 50, studentY + 20);
     doc.fillColor('#111827').text((transaction.student.name || "").toUpperCase(), 150, studentY + 20, { weight: 'bold' });
@@ -268,7 +279,7 @@ class FeeService {
 
     // 6. Footer
     doc.fontSize(8).fillColor('#9ca3af').text(
-      'This is a system-generated receipt for LBS Public School and does not require a physical signature.',
+      'This is a system-generated receipt for Little Flower English School and does not require a physical signature.',
       40, 780, { align: 'center' }
     );
 
