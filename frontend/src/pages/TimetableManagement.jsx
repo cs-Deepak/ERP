@@ -30,7 +30,7 @@ const TimetableManagement = () => {
   const [teachers, setTeachers] = useState([]);
 
   const [selectedClass, setSelectedClass] = useState("");
-  const [selectedSemester, setSelectedSemester] = useState("Semester 1");
+  const [selectedSemester, setSelectedSemester] = useState("Annual Term");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -324,10 +324,9 @@ const TimetableManagement = () => {
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(e.target.value)}
           >
-            <option>Semester 1</option>
-            <option>Semester 2</option>
-            <option>Fall Term</option>
-            <option>Spring Term</option>
+            <option>Annual Term</option>
+            <option>Term 1 (Half Yearly)</option>
+            <option>Term 2 (Annual Exam)</option>
           </select>
         </div>
 

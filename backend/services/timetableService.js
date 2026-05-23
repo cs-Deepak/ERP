@@ -223,7 +223,7 @@ exports.generateTimetablePDF = async (classId, outStream) => {
   // 3. Info Section
   doc.fillColor('#000000').fontSize(10);
   doc.text(`Academic Year: ${timetable.academicYear}`, 40, 150);
-  doc.text(`Semester/Section: ${timetable.semester}`, 40, 165);
+  doc.text(`Academic Term: ${timetable.semester}`, 40, 165);
   doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 420, 150);
   doc.moveDown(2);
 
