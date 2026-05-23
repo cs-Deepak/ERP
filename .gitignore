@@ -56,3 +56,11 @@ coverage/
 # Cache
 .eslintcache
 .stylelintcache
+
+
+mobile_ui_snippets/
+my-app/
+output.log
+output.txt
+ver_out.txt
+check_students_diag.js
