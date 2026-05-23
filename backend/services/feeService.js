@@ -188,7 +188,11 @@ class FeeService {
     const logoPath = path.join(__dirname, '../assets/schoollogo.png');
     
     if (fs.existsSync(logoPath)) {
+      doc.save();
+      doc.circle(62.5, 57.5, 22.5).clip();
       doc.image(logoPath, 40, 35, { width: 45, height: 45 });
+      doc.restore();
+      
       doc.fillColor('#1e3a8a').fontSize(18).text('LITTLE FLOWER ENGLISH SCHOOL', 100, 40, { weight: 'bold' });
       doc.fontSize(9).fillColor('#4b5563').text('Meerut Road, Little Flower Campus, Uttar Pradesh, India', 100, 58);
       doc.fontSize(8).text('Website: www.littleflowerschool.edu.in | Email: contact@littleflowerschool.edu.in', 100, 70);

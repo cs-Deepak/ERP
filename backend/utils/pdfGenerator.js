@@ -44,7 +44,10 @@ const generateFeeReceipt = async (data) => {
     // --- Header ---
     const logoPath = path.join(__dirname, '../assets/schoollogo.png');
     if (fs.existsSync(logoPath)) {
+      doc.save();
+      doc.circle(72.5, 67.5, 22.5).clip();
       doc.image(logoPath, 50, 45, { width: 45, height: 45 });
+      doc.restore();
       
       doc.fillColor('#1e293b')
          .fontSize(14)
