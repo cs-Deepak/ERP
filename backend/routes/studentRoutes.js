@@ -15,9 +15,12 @@ const {
   deleteStudent,
 } = require('../controllers/studentController');
 
+const { studentPhotoUpload } = require('../middleware/upload');
+
 // GET    /api/students        → List all students
 // POST   /api/students        → Create a new student
-router.route('/').get(getAllStudents).post(createStudent);
+router.route('/').get(getAllStudents).post(studentPhotoUpload, createStudent);
+router.post('/create', studentPhotoUpload, createStudent);
 
 // GET    /api/students/:studentId/profile → Comprehensive profile + fees
 router.get('/:studentId/profile', getStudentProfile);
@@ -25,6 +28,6 @@ router.get('/:studentId/profile', getStudentProfile);
 // GET    /api/students/:id    → Get one student (by _id)
 // PUT    /api/students/:id    → Update a student
 // DELETE /api/students/:id    → Soft-delete a student
-router.route('/:id').get(getStudentById).put(updateStudent).delete(deleteStudent);
+router.route('/:id').get(getStudentById).put(studentPhotoUpload, updateStudent).delete(deleteStudent);
 
 module.exports = router;

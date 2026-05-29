@@ -30,14 +30,19 @@ const validateModels = async () => {
         // 2. Validate Student
         console.log('[2] Validating Student Model...');
         const student = new Student({
-            firstName: 'John',
-            lastName: 'Doe',
-            email: 'john.doe@example.com',
-            grade: '10',
+            fullName: 'John Doe',
+            admissionNumber: 'ADM-2026-0099',
             rollNumber: 'R101',
-            parentName: 'Jane Doe',
-            parentPhone: '1234567890',
-            class: new mongoose.Types.ObjectId()
+            gender: 'Male',
+            dob: new Date('2015-05-15'),
+            email: 'john.doe@example.com',
+            className: '10th Standard',
+            section: 'A',
+            session: '2026-2027',
+            fatherName: 'Robert Doe',
+            motherName: 'Jane Doe',
+            emergencyContact: '9876543210',
+            status: 'Active'
         });
         await student.validate();
         console.log('   Student model is valid.');
@@ -83,7 +88,9 @@ const validateModels = async () => {
             amount: 5000,
             type: 'Tuition',
             status: 'Paid',
-            dueDate: new Date()
+            dueDate: new Date(),
+            academicYear: '2026-2027',
+            month: 'April'
         });
         await fee.validate();
         console.log('   FeeTransaction model is valid.');

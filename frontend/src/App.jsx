@@ -12,8 +12,11 @@ import Layout from "./layouts/Layout";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import ClassManagement from "./pages/ClassManagement";
-import StudentManagement from "./pages/StudentManagement";
-import StudentProfile from "./pages/StudentProfile";
+import StudentList from "./pages/student/StudentList";
+import AddStudent from "./pages/student/AddStudent";
+import StudentProfile from "./pages/student/StudentProfile";
+import StudentIDCard from "./pages/student/StudentIDCard";
+import BulkIDCards from "./pages/student/BulkIDCards";
 import TeacherManagement from "./pages/TeacherManagement";
 import Attendance from "./pages/Attendance";
 import FeeCollection from "./pages/FeeCollection";
@@ -83,7 +86,40 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <Layout>
-                    <StudentManagement />
+                    <StudentList />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/students/bulk-idcards"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Layout>
+                    <BulkIDCards />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/students/new"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Layout>
+                    <AddStudent />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/students/edit/:id"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Layout>
+                    <AddStudent />
                   </Layout>
                 </ProtectedRoute>
               }
@@ -95,6 +131,17 @@ function App() {
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <Layout>
                     <StudentProfile />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/students/:studentId/idcard"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Layout>
+                    <StudentIDCard />
                   </Layout>
                 </ProtectedRoute>
               }

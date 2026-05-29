@@ -49,21 +49,35 @@ app.set('trust proxy', 1);
 // ──────────────────────────────────────────────
 // Security Middleware
 // ──────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:5000',
   'http://localhost:5173',
-  'https://school-management-system-tan-three.vercel.app'
+  'http://localhost:3000',
+  'https://school-management-system-tan-three.vercel.app',
+  'https://erp-taupe-zeta-35.vercel.app'
 ];
+
+if (process.env.ALLOWED_ORIGINS) {
+  const customOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
+  allowedOrigins.push(...customOrigins);
+}
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    const isLocal = origin && (
+      origin.startsWith('http://localhost:') || 
+      origin.startsWith('http://127.0.0.1:')
+    );
+    
+    if (!origin || isLocal || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('CORS not allowed'));
+      callback(new Error(`CORS not allowed for origin: ${origin}`));
     }
   },
   credentials: true,
@@ -71,10 +85,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Rate limiting
+// Rate limiting (Relaxed to 1000 requests per 15 mins to accommodate intensive operations like Bulk ID Cards)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000,
   message: { success: false, message: 'Too many requests, please try again later.' }
 });
 app.use('/api', limiter);

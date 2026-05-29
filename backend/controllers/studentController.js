@@ -16,18 +16,20 @@ const { successResponse, errorResponse } = require('../utils/apiResponse');
  */
 const getAllStudents = async (req, res, next) => {
   try {
-    const { grade, section, isActive, page = 1, limit = 20 } = req.query;
+    const { grade, className, class: classQuery, section, isActive, page = 1, limit = 20 } = req.query;
 
     // Build filter object
     const filter = {};
-    if (grade) filter.grade = grade;
+    if (grade) filter.className = grade;
+    if (className) filter.className = className;
+    if (classQuery) filter.className = classQuery;
     if (section) filter.section = section;
     if (isActive !== undefined) {
       if (isActive === 'true') {
-        // Show active OR students with no status field (legacy)
-        filter.status = { $ne: 'inactive' };
+        // Show active OR students with no status field
+        filter.status = 'Active';
       } else {
-        filter.status = 'inactive';
+        filter.status = 'Inactive';
       }
     }
 
@@ -142,13 +144,13 @@ const getStudentProfile = async (req, res, next) => {
   try {
     const { studentId } = req.params;
 
-    // 1. Fetch Student details with Class information
+    // 1. Fetch Student details
     // Support both custom studentId (e.g., STU-2026-0001) and MongoDB _id as fallback
-    let student = await Student.findOne({ studentId }).populate('class');
+    let student = await Student.findOne({ studentId });
     
     // Fallback to searching by MongoDB _id if not found by studentId
     if (!student && /^[0-9a-fA-F]{24}$/.test(studentId)) {
-      student = await Student.findById(studentId).populate('class');
+      student = await Student.findById(studentId);
     }
 
     if (!student) {
@@ -162,20 +164,33 @@ const getStudentProfile = async (req, res, next) => {
     // 3. Construct clean, frontend-ready JSON
     const response = {
       personalDetails: {
-        name: student.name,
+        name: student.fullName,
+        fullName: student.fullName,
         studentId: student.studentId,
         rollNumber: student.rollNumber,
-        admissionDate: student.admissionDate,
+        admissionNumber: student.admissionNumber,
+        admissionDate: student.createdAt,
         status: student.status,
+        gender: student.gender,
+        dob: student.dob,
+        studentPhoto: student.studentPhoto,
+        bloodGroup: student.bloodGroup,
+        qrCode: student.qrCode,
+        barcode: student.barcode,
       },
       academicDetails: {
-        className: student.class ? student.class.name : 'N/A',
+        className: student.className,
         section: student.section,
+        session: student.session,
       },
       contactDetails: {
         address: student.address,
-        parentName: student.parentName,
-        parentMobile: student.parentPhone,
+        phone: student.phone,
+        fatherName: student.fatherName,
+        motherName: student.motherName,
+        parentName: student.fatherName || student.motherName, // Backward compatibility
+        parentMobile: student.emergencyContact, // Backward compatibility
+        emergencyContact: student.emergencyContact,
       },
       feeSummary: feeLedger ? {
         academicYear: feeLedger.academicYear,

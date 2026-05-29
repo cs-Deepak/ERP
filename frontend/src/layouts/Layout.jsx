@@ -40,7 +40,7 @@ const Layout = ({ children }) => {
     {
       id: "students",
       path: "/students",
-      label: "Student Directory",
+      label: "Students",
       icon: Users,
       roles: ["admin"],
     },

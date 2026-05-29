@@ -1,0 +1,718 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  Eye,
+  Filter,
+  LayoutGrid,
+  List,
+  ChevronDown,
+  Contact2,
+} from "lucide-react";
+import Button from "../../components/ui/Button";
+import Skeleton, { TableSkeleton } from "../../components/ui/Skeleton";
+import EmptyState from "../../components/ui/EmptyState";
+import ConfirmModal from "../../components/ui/ConfirmModal";
+import { useToast } from "../../context/ToastContext";
+import { cn } from "../../utils/cn";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
+
+const StudentList = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { addToast } = useToast();
+
+  const [students, setStudents] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterClass, setFilterClass] = useState("all");
+  const [filterSection, setFilterSection] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [viewMode, setViewMode] = useState("list"); // 'list' or 'grid'
+  
+  // Selection State for Bulk Actions
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Dynamic API host resolution for static assets (studentPhoto)
+  const apiHost = api.defaults.baseURL ? api.defaults.baseURL.replace('/api', '') : "";
+
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page: currentPage,
+        limit: pageSize,
+      };
+
+      if (filterClass !== "all") {
+        params.className = filterClass;
+      }
+
+      if (filterSection !== "all") {
+        params.section = filterSection;
+      }
+
+      if (filterStatus !== "all") {
+        params.isActive = filterStatus === "active" ? "true" : "false";
+      }
+
+      const res = await api.get("/students", { params });
+      if (res.data.success) {
+        setStudents(res.data.data.students || []);
+        if (res.data.data.pagination) {
+          setTotalPages(res.data.data.pagination.totalPages || 1);
+          setTotalStudents(res.data.data.pagination.total || 0);
+        }
+      }
+    } catch (error) {
+      console.error("Fetch students error:", error);
+      addToast("Failed to fetch students from server", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchClasses = async () => {
+    try {
+      const endpoint =
+        user?.role === "teacher"
+          ? "/timetable/teacher/assigned-classes"
+          : "/admin/classes";
+      const res = await api.get(endpoint);
+      if (res.data.success) {
+        setClasses(res.data.data || []);
+      }
+    } catch (error) {
+      console.error("Fetch classes error:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchClasses();
+  }, [user]);
+
+  useEffect(() => {
+    fetchStudents();
+    setSelectedIds([]); // Clear selection when filters change
+  }, [currentPage, pageSize, filterClass, filterSection, filterStatus]);
+
+  const handleDelete = async () => {
+    if (!selectedStudent) return;
+    setIsProcessing(true);
+    try {
+      const res = await api.delete(`/students/${selectedStudent._id}`);
+      if (res.data.success) {
+        addToast("Student record deactivated successfully");
+        fetchStudents();
+      }
+    } catch (error) {
+      console.error("Delete student error:", error);
+      addToast("Failed to deactivate student record", "error");
+    } finally {
+      setIsDeleteConfirmOpen(false);
+      setIsProcessing(false);
+      setSelectedStudent(null);
+    }
+  };
+
+  // Client side quick search
+  const searchedStudents = students.filter((s) => {
+    const fullName = (s.fullName || "").toLowerCase();
+    const query = searchQuery.toLowerCase();
+    const matchesSearch =
+      fullName.includes(query) ||
+      (s.rollNumber && s.rollNumber.toLowerCase().includes(query)) ||
+      (s.studentId && s.studentId.toLowerCase().includes(query)) ||
+      (s.admissionNumber && s.admissionNumber.toLowerCase().includes(query));
+    
+    return matchesSearch;
+  });
+
+  // Bulk selection handlers
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(searchedStudents.map((s) => s._id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500 relative">
+      {/* 1. Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h2 className="text-3xl font-black text-gray-900 tracking-tight">
+            Students Directory
+          </h2>
+          <p className="text-gray-500 font-medium italic mt-1">
+            Manage academic profiles, student enrollments, and printable ID credentials.
+          </p>
+        </div>
+        <Button
+          onClick={() => navigate("/students/new")}
+          icon={Plus}
+          className="h-13 rounded-2xl shadow-lg shadow-indigo-100 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
+        >
+          Enroll Student
+        </Button>
+      </div>
+
+      {/* 2. Controls and Filters */}
+      <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+          
+          {/* Search bar */}
+          <div className="lg:col-span-4 relative group">
+            <Search
+              className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Search by name, roll, ID, admission..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-13 pr-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-semibold focus:ring-4 focus:ring-indigo-50/50 focus:bg-white outline-none transition-all"
+            />
+          </div>
+
+          {/* Filter: Class */}
+          <div className="lg:col-span-2.5 relative group">
+            <Filter
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              size={16}
+            />
+            <select
+              className="w-full pl-11 pr-10 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50/50 focus:bg-white outline-none appearance-none cursor-pointer transition-all"
+              value={filterClass}
+              onChange={(e) => {
+                setFilterClass(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="all">All Classes</option>
+              {classes.map((c) => (
+                <option key={c._id} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+          </div>
+
+          {/* Filter: Section */}
+          <div className="lg:col-span-2 relative group">
+            <select
+              className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50/50 focus:bg-white outline-none appearance-none cursor-pointer transition-all"
+              value={filterSection}
+              onChange={(e) => {
+                setFilterSection(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="all">All Sections</option>
+              <option value="A">Section A</option>
+              <option value="B">Section B</option>
+              <option value="C">Section C</option>
+              <option value="D">Section D</option>
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+          </div>
+
+          {/* Filter: Status */}
+          <div className="lg:col-span-2 relative group">
+            <select
+              className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50/50 focus:bg-white outline-none appearance-none cursor-pointer transition-all"
+              value={filterStatus}
+              onChange={(e) => {
+                setFilterStatus(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Inactive Only</option>
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="lg:col-span-1.5 flex items-center justify-end gap-1 border-l border-gray-100 pl-4 h-9">
+            <button
+              onClick={() => setViewMode("list")}
+              className={cn(
+                "p-2 rounded-xl transition-all",
+                viewMode === "list" ? "bg-indigo-50 text-indigo-600" : "text-gray-400 hover:bg-gray-50"
+              )}
+              title="List View"
+            >
+              <List size={18} />
+            </button>
+            <button
+              onClick={() => setViewMode("grid")}
+              className={cn(
+                "p-2 rounded-xl transition-all",
+                viewMode === "grid" ? "bg-indigo-50 text-indigo-600" : "text-gray-400 hover:bg-gray-50"
+              )}
+              title="Grid View"
+            >
+              <LayoutGrid size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Main Directory */}
+      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden min-h-[400px] flex flex-col justify-between">
+        <div className="flex-1">
+          {loading ? (
+            <div className="p-8">
+              {viewMode === "list" ? (
+                <TableSkeleton rows={6} columns={6} />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="h-56 bg-gray-50 rounded-3xl animate-pulse" />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : searchedStudents.length === 0 ? (
+            <EmptyState
+              title="No students found"
+              description={
+                searchQuery
+                  ? `No records matched your search query "${searchQuery}"`
+                  : "Start enrolling your students to see them in the directory."
+              }
+              actionLabel={searchQuery ? "Clear Search" : "Enroll New Student"}
+              onAction={() => (searchQuery ? setSearchQuery("") : navigate("/students/new"))}
+            />
+          ) : viewMode === "list" ? (
+            /* Table View */
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-gray-50/50 border-b border-gray-100">
+                    <th className="px-8 py-5 text-left w-12">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        checked={searchedStudents.length > 0 && selectedIds.length === searchedStudents.length}
+                        onChange={handleSelectAll}
+                      />
+                    </th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                      Student Details
+                    </th>
+                    <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                      Admission No
+                    </th>
+                    <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                      Student ID
+                    </th>
+                    <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                      Class & Section
+                    </th>
+                    <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                      Emergency contact
+                    </th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-wider text-right">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {searchedStudents.map((student) => {
+                    // Resolve photo URL
+                    const photoUrl = student.studentPhoto
+                      ? (student.studentPhoto.startsWith("http") || student.studentPhoto.startsWith("data:")
+                        ? student.studentPhoto
+                        : `${apiHost}${student.studentPhoto}`)
+                      : null;
+
+                    return (
+                      <tr
+                        key={student._id}
+                        className={cn(
+                          "group hover:bg-gray-50/50 transition-all duration-300",
+                          selectedIds.includes(student._id) && "bg-indigo-50/15"
+                        )}
+                      >
+                        <td className="px-8 py-4.5 text-left w-12">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                            checked={selectedIds.includes(student._id)}
+                            onChange={() => handleSelectOne(student._id)}
+                          />
+                        </td>
+                        <td className="px-8 py-4.5">
+                          <div className="flex items-center gap-4">
+                            <div className="w-11 h-11 bg-indigo-50 text-indigo-700 rounded-xl flex items-center justify-center font-black shadow-inner overflow-hidden uppercase shrink-0">
+                              {photoUrl ? (
+                                <img
+                                  src={photoUrl}
+                                  alt={student.fullName}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span>{student.fullName ? student.fullName.charAt(0) : "S"}</span>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors capitalize">
+                                {student.fullName}
+                              </p>
+                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+                                Roll No: {student.rollNumber || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4.5 text-xs font-semibold text-gray-700">
+                          {student.admissionNumber || "N/A"}
+                        </td>
+                        <td className="px-6 py-4.5">
+                          <span className="font-mono text-xs font-semibold text-gray-600 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100/50">
+                            {student.studentId || "PENDING"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4.5">
+                          <span className="px-3 py-1 bg-indigo-50/50 text-indigo-700 rounded-lg text-[10px] font-bold uppercase border border-indigo-100/30">
+                            {student.className} - {student.section}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4.5">
+                          <span
+                            className={cn(
+                              "px-3 py-1 rounded-full text-[10px] font-bold uppercase inline-flex items-center gap-1.5 border",
+                              student.status === "Active"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                : "bg-rose-50 text-rose-700 border-rose-100"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "w-1.5 h-1.5 rounded-full",
+                                student.status === "Active" ? "bg-emerald-500" : "bg-rose-500"
+                              )}
+                            />
+                            {student.status || "Active"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4.5">
+                          <p className="text-xs font-bold text-gray-800">
+                            {student.fatherName || student.motherName || "N/A"}
+                          </p>
+                          <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+                            {student.emergencyContact || "N/A"}
+                          </p>
+                        </td>
+                        <td className="px-8 py-4.5 text-right">
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <button
+                              onClick={() => navigate(`/students/${student.studentId || student._id}`)}
+                              className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                              title="View Profile"
+                            >
+                              <Eye size={16} />
+                            </button>
+                            <button
+                              onClick={() => navigate(`/students/${student.studentId || student._id}/idcard`)}
+                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                              title="Print / Download Student ID Card"
+                            >
+                              <Contact2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => navigate(`/students/edit/${student._id}`)}
+                              className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                              title="Edit Student"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            {user?.role === "admin" && (
+                              <button
+                                onClick={() => {
+                                  setSelectedStudent(student);
+                                  setIsDeleteConfirmOpen(true);
+                                }}
+                                className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                                title="Delete Record"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            /* Grid View */
+            <div className="p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {searchedStudents.map((student) => {
+                const photoUrl = student.studentPhoto
+                  ? (student.studentPhoto.startsWith("http") || student.studentPhoto.startsWith("data:")
+                    ? student.studentPhoto
+                    : `${apiHost}${student.studentPhoto}`)
+                  : null;
+
+                return (
+                  <div
+                    key={student._id}
+                    className={cn(
+                      "group relative border border-gray-100 bg-white rounded-3xl p-6 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-300 flex flex-col justify-between animate-in fade-in",
+                      selectedIds.includes(student._id) && "border-indigo-500 shadow-lg shadow-indigo-50/20"
+                    )}
+                  >
+                    {/* Floating check box */}
+                    <input
+                      type="checkbox"
+                      className="absolute top-4 right-4 w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer print:hidden z-10"
+                      checked={selectedIds.includes(student._id)}
+                      onChange={() => handleSelectOne(student._id)}
+                    />
+
+                    <div className="space-y-4">
+                      {/* Header */}
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-indigo-50 text-indigo-700 rounded-2xl flex items-center justify-center font-black shadow-inner overflow-hidden uppercase text-lg shrink-0">
+                          {photoUrl ? (
+                            <img
+                              src={photoUrl}
+                              alt={student.fullName}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span>{student.fullName ? student.fullName.charAt(0) : "S"}</span>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                            {student.fullName}
+                          </h4>
+                          <span className="font-mono text-[10px] font-semibold text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                            ID: {student.studentId || "PENDING"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Stats List */}
+                      <div className="grid grid-cols-2 gap-3 pt-2">
+                        <div className="p-3 bg-gray-50/50 rounded-2xl border border-gray-100/50">
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block leading-none">
+                            Class/Section
+                          </span>
+                          <span className="text-xs font-bold text-gray-700 block mt-1.5 truncate">
+                            {student.className} - {student.section}
+                          </span>
+                        </div>
+                        <div className="p-3 bg-gray-50/50 rounded-2xl border border-gray-100/50">
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block leading-none">
+                            Roll Number
+                          </span>
+                          <span className="text-xs font-bold text-gray-700 block mt-1.5">
+                            {student.rollNumber || "N/A"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Contact detail */}
+                      <div className="space-y-1 py-1.5 border-t border-b border-gray-50">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase">Emergency Info</p>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-medium text-gray-600 truncate max-w-[120px]">
+                            {student.fatherName || student.motherName || "N/A"}
+                          </span>
+                          <span className="text-gray-400 font-semibold font-mono">{student.emergencyContact || "N/A"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions footer */}
+                    <div className="flex items-center justify-between gap-3 pt-5 mt-4">
+                      <span
+                        className={cn(
+                          "px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase border inline-flex items-center gap-1",
+                          student.status === "Active"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                            : "bg-rose-50 text-rose-700 border-rose-100"
+                        )}
+                      >
+                        <span className={cn("w-1 h-1 rounded-full", student.status === "Active" ? "bg-emerald-500" : "bg-rose-500")} />
+                        {student.status || "Active"}
+                      </span>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => navigate(`/students/${student.studentId || student._id}`)}
+                          className="p-2 text-gray-400 hover:text-indigo-600 bg-gray-50 hover:bg-indigo-50 rounded-xl transition-all"
+                          title="View Profile"
+                        >
+                          <Eye size={15} />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/students/${student.studentId || student._id}/idcard`)}
+                          className="p-2 text-gray-400 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 rounded-xl transition-all"
+                          title="Print ID Card"
+                        >
+                          <Contact2 size={15} />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/students/edit/${student._id}`)}
+                          className="p-2 text-gray-400 hover:text-emerald-600 bg-gray-50 hover:bg-emerald-50 rounded-xl transition-all"
+                          title="Edit Details"
+                        >
+                          <Edit2 size={15} />
+                        </button>
+                        {user?.role === "admin" && (
+                          <button
+                            onClick={() => {
+                              setSelectedStudent(student);
+                              setIsDeleteConfirmOpen(true);
+                            }}
+                            className="p-2 text-gray-400 hover:text-rose-600 bg-gray-50 hover:bg-rose-50 rounded-xl transition-all"
+                            title="Unenroll"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* 4. Directory Pagination */}
+        {totalPages > 1 && (
+          <div className="px-8 py-5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm font-semibold text-gray-500">
+            <div className="flex items-center gap-3">
+              <span>Show</span>
+              <select
+                className="bg-gray-50 border border-gray-100 text-gray-700 font-bold px-2 py-1 rounded-lg focus:ring-2 focus:ring-indigo-100 outline-none cursor-pointer"
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+              <span>records</span>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <span>
+                Showing <strong className="text-gray-800">{searchedStudents.length}</strong> of{" "}
+                <strong className="text-gray-800">{totalStudents}</strong> students
+              </span>
+
+              <div className="flex items-center gap-2 border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  className={cn(
+                    "px-4 py-2 hover:bg-gray-50 border-r border-gray-100 font-bold",
+                    currentPage === 1 ? "text-gray-300 bg-gray-50 cursor-not-allowed" : "text-gray-700"
+                  )}
+                >
+                  Previous
+                </button>
+                <div className="px-4 py-2 font-bold text-gray-800 bg-indigo-50 text-indigo-700">
+                  {currentPage} of {totalPages}
+                </div>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  className={cn(
+                    "px-4 py-2 hover:bg-gray-50 font-bold",
+                    currentPage === totalPages ? "text-gray-300 bg-gray-50 cursor-not-allowed" : "text-gray-700"
+                  )}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Floating Bulk Actions Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md border border-slate-800 text-white px-8 py-4.5 rounded-[2rem] shadow-2xl z-[80] flex items-center gap-8 animate-in slide-in-from-bottom-10 duration-300">
+          <div className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full animate-pulse" />
+            <span className="text-sm font-black tracking-tight">
+              {selectedIds.length} {selectedIds.length === 1 ? "student" : "students"} selected
+            </span>
+          </div>
+          <div className="h-6 w-px bg-slate-800" />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate(`/students/bulk-idcards?ids=${selectedIds.join(",")}`)}
+              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-xs font-bold text-white rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer border border-transparent"
+            >
+              <Contact2 size={14} />
+              <span>Generate Bulk ID Cards</span>
+            </button>
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-xs font-bold text-slate-300 rounded-xl transition-all"
+            >
+              Deselect All
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Unenroll Confirm Modal */}
+      <ConfirmModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleDelete}
+        loading={isProcessing}
+        title="Unenroll Student"
+        message={`Are you sure you want to deactivate ${selectedStudent?.fullName}'s active enrollment records? They will be marked as inactive.`}
+      />
+    </div>
+  );
+};
+
+export default StudentList;
