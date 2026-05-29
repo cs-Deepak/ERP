@@ -60,7 +60,7 @@ const seedDemoData = async () => {
                     name: classNames[i],
                     section: `Room ${100 + i}`,
                     tuitionFee: 2000 + (i * 500),
-                    teacher: teacherUsers[i]._id // Primary teacher
+                    teacher: teachers[i]._id // Primary teacher
                 });
             }
             classes.push(cls);

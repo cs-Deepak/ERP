@@ -71,9 +71,9 @@ const seedData = async () => {
 
     // 5. Create Classes
     const classes = await Class.create([
-      { name: '10-A', teacher: teacherUsers[0]._id, tuitionFee: 25000 },
-      { name: '11-B', teacher: teacherUsers[1]._id, tuitionFee: 32000 },
-      { name: '12-C', teacher: teacherUsers[2]._id, tuitionFee: 35000 },
+      { name: '10-A', teacher: teachers[0]._id, tuitionFee: 25000 },
+      { name: '11-B', teacher: teachers[1]._id, tuitionFee: 32000 },
+      { name: '12-C', teacher: teachers[2]._id, tuitionFee: 35000 },
     ]);
 
     // 6. Create Students

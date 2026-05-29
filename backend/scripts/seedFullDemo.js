@@ -67,7 +67,7 @@ const seedFullDemo = async () => {
     for (let i = 0; i < classNames.length; i++) {
         const cls = await Class.create({
             name: classNames[i],
-            teacher: teachers[i % teachers.length].user._id,
+            teacher: teachers[i % teachers.length].profile._id,
             tuitionFee: 15000 + (i * 2000),
             section: 'A-Block'
         });
