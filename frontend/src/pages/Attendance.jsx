@@ -147,10 +147,10 @@ const Attendance = () => {
 
   const filteredStudents = students.filter(
     (s) =>
-      `${s.firstName} ${s.lastName}`
+      (s.fullName || "")
         .toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
-      s.rollNumber.includes(searchQuery),
+      (s.rollNumber && s.rollNumber.includes(searchQuery)),
   );
 
   const stats = {
@@ -328,11 +328,11 @@ const Attendance = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-indigo-50 text-indigo-700 rounded-2xl flex items-center justify-center font-black shadow-inner">
-                            {student.firstName.charAt(0)}
+                            {student.fullName ? student.fullName.charAt(0) : "S"}
                           </div>
                           <div>
                             <p className="font-black text-gray-900 leading-tight uppercase tracking-tight">
-                              {student.firstName} {student.lastName}
+                              {student.fullName || "N/A"}
                             </p>
                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
                               Roll: {student.rollNumber}
@@ -413,10 +413,10 @@ const Attendance = () => {
                           <td className="px-10 py-6">
                             <div className="flex items-center gap-4">
                               <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-black text-sm">
-                                {student.firstName.charAt(0)}
+                                {student.fullName ? student.fullName.charAt(0) : "S"}
                               </div>
                               <p className="font-black text-gray-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
-                                {student.firstName} {student.lastName}
+                                {student.fullName || "N/A"}
                               </p>
                             </div>
                           </td>
