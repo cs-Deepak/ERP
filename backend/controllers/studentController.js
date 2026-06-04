@@ -224,7 +224,9 @@ const getStudentProfile = async (req, res, next) => {
 
     // 3. Construct clean, frontend-ready JSON
     const response = {
+      _id: student._id,
       personalDetails: {
+        _id: student._id,
         name: student.fullName,
         fullName: student.fullName,
         studentId: student.studentId,

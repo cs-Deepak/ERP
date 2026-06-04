@@ -132,7 +132,7 @@ class AdminService {
 
     for (const student of students) {
       const records = await Attendance.find({ student: student._id, class: classId });
-      const presentCount = records.filter(r => r.status === 'Present').length;
+      const presentCount = records.filter(r => r.status === 'Present' || r.status === 'Late').length;
       const absentCount = records.filter(r => r.status === 'Absent').length;
       const attendancePercentage = totalClasses > 0 
         ? ((presentCount / totalClasses) * 100).toFixed(2) 
@@ -140,7 +140,7 @@ class AdminService {
 
       report.push({
         studentId: student._id,
-        name: student.name,
+        name: student.fullName,
         rollNo: student.rollNumber,
         presentCount,
         absentCount,
@@ -164,7 +164,7 @@ class AdminService {
     const attendanceDates = await Attendance.distinct('date', { class: student.class._id });
     const totalClasses = attendanceDates.length;
 
-    const present = records.filter(r => r.status === 'Present').length;
+    const present = records.filter(r => r.status === 'Present' || r.status === 'Late').length;
     const absent = records.filter(r => r.status === 'Absent').length;
     const percentage = totalClasses > 0 
       ? ((present / totalClasses) * 100).toFixed(2) 
@@ -172,7 +172,7 @@ class AdminService {
 
     return {
       studentDetails: {
-        name: student.name,
+        name: student.fullName,
         rollNo: student.rollNumber,
         className: student.class ? student.class.name : 'N/A',
       },
@@ -245,7 +245,7 @@ class AdminService {
 
     return {
       studentInfo: {
-        name: student.name,
+        name: student.fullName,
         rollNo: student.rollNumber,
         className: student.class ? student.class.name : 'N/A',
         program: 'Regular'

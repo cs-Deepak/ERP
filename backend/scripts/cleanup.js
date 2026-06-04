@@ -15,6 +15,7 @@ const Subject = require('../models/Subject');
 const ClassSubject = require('../models/ClassSubject');
 const Timetable = require('../models/Timetable');
 const Counter = require('../models/Counter');
+const StaffAttendance = require('../models/StaffAttendance');
 
 // Helper function to clear files in directory while keeping directory structure and .gitkeep
 const clearDirectory = (dirPath) => {
@@ -58,6 +59,7 @@ const cleanupData = async () => {
       FeeTransaction.deleteMany({}),
       FeeLedger.deleteMany({}),
       Attendance.deleteMany({}),
+      StaffAttendance.deleteMany({}),
       Subject.deleteMany({}),
       ClassSubject.deleteMany({}),
       Timetable.deleteMany({}),

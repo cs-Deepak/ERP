@@ -1,27 +1,21 @@
 /**
- * Attendance Model
+ * Staff Attendance Model
  * 
- * Tracks daily attendance for students in specific classes.
+ * Tracks daily attendance for staff members (teachers).
  */
 
 const mongoose = require('mongoose');
 
-const attendanceSchema = new mongoose.Schema(
+const staffAttendanceSchema = new mongoose.Schema(
   {
-    student: {
+    teacher: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Student',
-      required: [true, 'Student reference is required'],
-    },
-    class: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Class',
-      required: [true, 'Class reference is required'],
+      ref: 'Teacher',
+      required: [true, 'Teacher reference is required'],
     },
     date: {
       type: Date,
       required: [true, 'Attendance date is required'],
-      default: Date.now,
     },
     status: {
       type: String,
@@ -43,7 +37,7 @@ const attendanceSchema = new mongoose.Schema(
   }
 );
 
-// Compound index to ensure uniqueness of student-date-class attendance records
-attendanceSchema.index({ student: 1, date: 1, class: 1 }, { unique: true });
+// Compound index to ensure uniqueness of teacher-date attendance records
+staffAttendanceSchema.index({ teacher: 1, date: 1 }, { unique: true });
 
-module.exports = mongoose.model('Attendance', attendanceSchema);
+module.exports = mongoose.model('StaffAttendance', staffAttendanceSchema);
