@@ -49,7 +49,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-6 sm:p-8 font-sans">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6 sm:p-8 font-sans">
       <div className="w-full max-w-md space-y-8">
         {/* Logo & Branding */}
         <div className="text-center space-y-4">

@@ -135,7 +135,7 @@ const StudentProfile = () => {
     : null;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] animate-in fade-in duration-500 pb-20 print:bg-white print:p-0">
+    <div className="min-h-screen bg-gray-50 animate-in fade-in duration-500 pb-20 print:bg-white print:p-0">
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* 1. Header & Actions */}
@@ -318,6 +318,26 @@ const StudentProfile = () => {
                   <span className="font-black text-gray-700">{personalDetails?.admissionNumber || "N/A"}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-gray-400 uppercase tracking-wide">Admission Date</span>
+                  <span className="font-black text-gray-700">
+                    {personalDetails?.admissionDate
+                      ? new Date(personalDetails.admissionDate).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+                      : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-gray-400 uppercase tracking-wide">Fee Discount</span>
+                  <span className="font-black text-emerald-600">
+                    {personalDetails?.discountPercentage ? `${personalDetails.discountPercentage}%` : "0% (Regular)"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-gray-400 uppercase tracking-wide">Prev. School</span>
+                  <span className="font-black text-gray-700 truncate max-w-[150px] inline-block text-right" title={personalDetails?.previousSchool}>
+                    {personalDetails?.previousSchool || "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-xs border-t border-gray-50 pt-3 mt-2">
                   <span className="font-bold text-gray-400 uppercase tracking-wide">Academic Session</span>
                   <span className="font-black text-gray-700">{academicDetails?.session || "N/A"}</span>
                 </div>
@@ -337,6 +357,12 @@ const StudentProfile = () => {
                   <span className="font-bold text-gray-400 uppercase tracking-wide">Blood Group</span>
                   <span className="font-black text-gray-700">{personalDetails?.bloodGroup || "Unknown"}</span>
                 </div>
+                {personalDetails?.customFields && Object.entries(personalDetails.customFields).map(([key, val]) => (
+                  <div key={key} className="flex justify-between items-center text-xs border-t border-gray-50 pt-3">
+                    <span className="font-bold text-gray-400 uppercase tracking-wide">{key}</span>
+                    <span className="font-black text-indigo-700">{val || "N/A"}</span>
+                  </div>
+                ))}
               </div>
             </div>
 

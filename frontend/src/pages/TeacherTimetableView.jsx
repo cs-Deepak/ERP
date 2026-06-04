@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Calendar,
   Download,
@@ -24,6 +25,8 @@ const TeacherTimetableView = () => {
   const [loading, setLoading] = useState(false);
   const [loadingClasses, setLoadingClasses] = useState(true);
 
+  const location = useLocation();
+
   // Fetch classes assigned to teacher
   useEffect(() => {
     const fetchAssignedClasses = async () => {
@@ -31,9 +34,14 @@ const TeacherTimetableView = () => {
         setLoadingClasses(true);
         const res = await api.get("/timetable/teacher/assigned-classes");
         if (res.data.success) {
-          setAssignedClasses(res.data.data);
-          if (res.data.data.length > 0) {
-            setSelectedClass(res.data.data[0]._id);
+          const classData = res.data.data;
+          setAssignedClasses(classData);
+          
+          const stateClassId = location.state?.classId;
+          if (stateClassId && classData.some(c => c._id === stateClassId)) {
+            setSelectedClass(stateClassId);
+          } else if (classData.length > 0) {
+            setSelectedClass(classData[0]._id);
           }
         }
       } catch (error) {
@@ -43,7 +51,7 @@ const TeacherTimetableView = () => {
       }
     };
     fetchAssignedClasses();
-  }, []);
+  }, [location.state]);
 
   // Fetch timetable when class changes
   useEffect(() => {

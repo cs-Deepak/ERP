@@ -84,7 +84,7 @@ const recordPayment = async (req, res, next) => {
     const receiptData = {
       receiptNumber: transaction.receiptNumber,
       date: transaction.paymentDate,
-      studentName: `${student.firstName} ${student.lastName}`,
+      studentName: student.fullName,
       class: student.class.name,
       rollNumber: student.rollNumber,
       paidAmount: transaction.amount,

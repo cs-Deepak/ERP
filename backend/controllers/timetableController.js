@@ -62,9 +62,28 @@ exports.getTimetableByClass = async (req, res, next) => {
         message: 'Timetable not found for this class',
       });
     }
+
+    // Role-based filtering: teachers only see their own slots and Breaks
+    let responseData = timetable;
+    if (role === 'teacher') {
+      const Teacher = require('../models/Teacher');
+      const teacher = await Teacher.findOne({ user: userId });
+      if (teacher) {
+        const timetableObj = timetable.toObject();
+        timetableObj.weeklySchedule = timetableObj.weeklySchedule.map(dayData => {
+          dayData.slots = dayData.slots.filter(slot => {
+            if (slot.type === 'Break') return true;
+            return slot.teacher && slot.teacher._id.toString() === teacher._id.toString();
+          });
+          return dayData;
+        });
+        responseData = timetableObj;
+      }
+    }
+
     res.status(200).json({
       success: true,
-      data: timetable,
+      data: responseData,
     });
   } catch (error) {
     next(error);
@@ -95,7 +114,7 @@ exports.downloadTimetable = async (req, res, next) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=timetable_${classId}.pdf`);
 
-    await timetableService.generateTimetablePDF(classId, res);
+    await timetableService.generateTimetablePDF(classId, res, role === 'teacher' ? userId : null);
   } catch (error) {
     next(error);
   }

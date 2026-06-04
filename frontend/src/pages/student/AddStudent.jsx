@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import {
   ArrowLeft,
@@ -14,6 +14,8 @@ import {
   FileImage,
   X,
   Sparkles,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import api from "../../services/api";
 import { useToast } from "../../context/ToastContext";
@@ -30,6 +32,8 @@ const STEPS = [
 
 const AddStudent = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = !!id;
   const { addToast } = useToast();
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -38,12 +42,21 @@ const AddStudent = () => {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoError, setPhotoError] = useState("");
   const [isDragActive, setIsDragActive] = useState(false);
+  const [classes, setClasses] = useState([]);
+  
+  // Custom dynamic fields state
+  const [customFields, setCustomFields] = useState([]);
+  const [newFieldKey, setNewFieldKey] = useState("");
+  const [isAddingField, setIsAddingField] = useState(false);
 
   // Initialize React Hook Form
   const {
     register,
     handleSubmit,
     trigger,
+    reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -65,14 +78,102 @@ const AddStudent = () => {
       motherName: "",
       emergencyContact: "",
       address: "",
+      admissionDate: new Date().toISOString().split("T")[0],
+      discountPercentage: 0,
+      previousSchool: "",
     },
     mode: "onTouched",
   });
 
+  const watchClassName = watch("className");
+  const watchSection = watch("section");
+
+  // Dynamic API host resolution for static assets (studentPhoto)
+  const apiHost = api.defaults.baseURL ? api.defaults.baseURL.replace('/api', '') : "";
+
+  // Fetch classes on mount
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const res = await api.get("/admin/classes");
+        if (res.data.success) {
+          setClasses(res.data.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching classes:", error);
+      }
+    };
+    fetchClasses();
+  }, []);
+
+  // Fetch student details for edit mode
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    const fetchStudent = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get(`/students/${id}`);
+        if (res.data.success) {
+          const student = res.data.data;
+          
+          // Populate custom fields from Map/Object
+          if (student.customFields) {
+            const fieldsArray = Object.entries(student.customFields).map(([key, val]) => ({
+              key,
+              value: String(val)
+            }));
+            setCustomFields(fieldsArray);
+          } else {
+            setCustomFields([]);
+          }
+
+          reset({
+            fullName: student.fullName || "",
+            gender: student.gender || "",
+            dob: student.dob ? student.dob.split("T")[0] : "",
+            bloodGroup: student.bloodGroup || "Unknown",
+            email: student.email || "",
+            phone: student.phone || "",
+            admissionNumber: student.admissionNumber || "",
+            rollNumber: student.rollNumber || "",
+            className: student.className || "",
+            section: student.section || "",
+            session: student.session || "2026-2027",
+            status: student.status || "Active",
+            transportMode: student.transportMode || "Private",
+            hostelRequired: student.hostelRequired || false,
+            fatherName: student.fatherName || "",
+            motherName: student.motherName || "",
+            emergencyContact: student.emergencyContact || "",
+            address: student.address || "",
+            admissionDate: student.admissionDate ? student.admissionDate.split("T")[0] : new Date().toISOString().split("T")[0],
+            discountPercentage: student.discountPercentage || 0,
+            previousSchool: student.previousSchool || "",
+          });
+
+          if (student.studentPhoto) {
+            const photoUrl = student.studentPhoto.startsWith("http") || student.studentPhoto.startsWith("data:")
+              ? student.studentPhoto
+              : `${apiHost}${student.studentPhoto}`;
+            setPhotoPreview(photoUrl);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching student details:", error);
+        addToast("Failed to load student details for editing", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudent();
+  }, [id, isEditMode, reset, apiHost]);
+
   // Step fields for trigger validation
   const STEP_FIELDS = [
     ["fullName", "gender", "dob", "bloodGroup", "email", "phone"],
-    ["admissionNumber", "rollNumber", "className", "section", "session", "status", "transportMode"],
+    ["admissionNumber", "rollNumber", "className", "section", "session", "status", "transportMode", "admissionDate", "discountPercentage"],
     ["fatherName", "motherName", "emergencyContact"],
     ["address"],
   ];
@@ -169,21 +270,40 @@ const AddStudent = () => {
 
     setLoading(true);
     try {
+      // Convert custom fields array back into an object mapping
+      const customFieldsObj = {};
+      customFields.forEach(f => {
+        if (f.key.trim()) {
+          customFieldsObj[f.key.trim()] = f.value;
+        }
+      });
+
       // Append student photo base64 string directly into payload if present
       const payload = {
         ...data,
         studentPhoto: photoPreview || "",
+        customFields: customFieldsObj,
       };
 
-      const res = await api.post("/students/create", payload);
+      let res;
+      if (isEditMode) {
+        res = await api.put(`/students/${id}`, payload);
+      } else {
+        res = await api.post("/students/create", payload);
+      }
       
       if (res.data.success) {
-        addToast("Student enrolled successfully! Credentials created.", "success");
+        addToast(
+          isEditMode
+            ? "Student profile updated successfully!"
+            : "Student enrolled successfully! Credentials created.",
+          "success"
+        );
         navigate("/students");
       }
     } catch (error) {
-      console.error("Create student error:", error);
-      const msg = error.response?.data?.message || "Failed to create student. Please verify input fields.";
+      console.error("Save student error:", error);
+      const msg = error.response?.data?.message || "Failed to save student. Please verify input fields.";
       addToast(msg, "error");
     } finally {
       setLoading(false);
@@ -203,10 +323,10 @@ const AddStudent = () => {
         </button>
         <div>
           <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest leading-none">
-            ERP Student Registrations
+            {isEditMode ? "ERP Student Editor" : "ERP Student Registrations"}
           </span>
           <h2 className="text-3xl font-black text-gray-900 tracking-tight mt-1">
-            Enroll New Student
+            {isEditMode ? "Edit Student Profile" : "Enroll New Student"}
           </h2>
         </div>
       </div>
@@ -360,6 +480,118 @@ const AddStudent = () => {
                     />
                   </div>
                 </div>
+
+                {/* Additional Custom Fields Panel */}
+                <div className="mt-8 pt-6 border-t border-gray-50 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h4 className="text-sm font-black text-gray-800 uppercase tracking-tight flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-indigo-600 animate-pulse" />
+                        Additional Custom Fields
+                      </h4>
+                      <p className="text-[10px] text-gray-400 font-medium">Add dynamic information like Aadhar Card, Passport No, etc.</p>
+                    </div>
+
+                    {!isAddingField ? (
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingField(true)}
+                        className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100/30 text-indigo-700 hover:text-indigo-800 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Plus size={14} />
+                        <span>Add Custom Field</span>
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {/* Inline key entry block */}
+                  {isAddingField && (
+                    <div className="p-4 bg-gray-50/60 border border-gray-105 rounded-2xl flex flex-col sm:flex-row items-end gap-3.5 max-w-lg animate-in zoom-in-95 duration-200">
+                      <div className="space-y-1.5 flex-1 w-full">
+                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">New Field Name</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Aadhar Number"
+                          value={newFieldKey}
+                          onChange={(e) => setNewFieldKey(e.target.value)}
+                          className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-100"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!newFieldKey.trim()) {
+                              addToast("Field name cannot be empty", "error");
+                              return;
+                            }
+                            if (customFields.some(f => f.key.toLowerCase() === newFieldKey.trim().toLowerCase())) {
+                              addToast("Field name already exists", "error");
+                              return;
+                            }
+                            setCustomFields(prev => [...prev, { key: newFieldKey.trim(), value: "" }]);
+                            setNewFieldKey("");
+                            setIsAddingField(false);
+                            addToast(`Field "${newFieldKey.trim()}" created!`);
+                          }}
+                          className="flex-1 sm:flex-initial px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl active:scale-95 transition-all cursor-pointer"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsAddingField(false);
+                            setNewFieldKey("");
+                          }}
+                          className="flex-1 sm:flex-initial px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-500 text-xs font-bold rounded-xl active:scale-95 transition-all cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* List of Custom Inputs */}
+                  {customFields.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/25 p-5 border border-dashed border-gray-100 rounded-3xl animate-in fade-in duration-300">
+                      {customFields.map((field) => (
+                        <div key={field.key} className="space-y-1.5 relative group animate-in slide-in-from-bottom-2 duration-200">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">
+                            {field.key}
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              placeholder={`Enter ${field.key}...`}
+                              value={field.value}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setCustomFields(prev => prev.map(f => f.key === field.key ? { ...f, value: val } : f));
+                              }}
+                              className="flex-1 px-5 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm font-semibold outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCustomFields(prev => prev.filter(f => f.key !== field.key));
+                                addToast(`Field "${field.key}" removed`);
+                              }}
+                              className="p-3 text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-all active:scale-90 cursor-pointer"
+                              title="Delete Field"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 bg-gray-50/30 border border-dashed border-gray-100 rounded-2xl text-xs font-bold text-gray-400 italic">
+                      No custom fields added yet.
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -404,34 +636,45 @@ const AddStudent = () => {
                     {errors.rollNumber && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.rollNumber.message}</p>}
                   </div>
 
-                  {/* Class Name */}
+                  {/* Hidden input to hold className for react-hook-form */}
+                  <input type="hidden" {...register("className", { required: "Class name is required" })} />
+                  <input type="hidden" {...register("section", { required: "Section is required" })} />
+
+                  {/* Class Group Dropdown */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Class Name *</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 10th Standard"
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Class Group *</label>
+                    <select
                       className={cn(
-                        "w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-semibold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all",
+                        "w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all appearance-none cursor-pointer",
                         errors.className && "border-red-200 bg-red-50/30"
                       )}
-                      {...register("className", { required: "Class name is required" })}
-                    />
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (!val) {
+                          setValue("className", "", { shouldValidate: true });
+                          setValue("section", "", { shouldValidate: true });
+                        } else if (val.includes("-")) {
+                          const [cls, sec] = val.split("-");
+                          setValue("className", cls, { shouldValidate: true });
+                          setValue("section", sec, { shouldValidate: true });
+                        } else {
+                          setValue("className", val, { shouldValidate: true });
+                          setValue("section", "A", { shouldValidate: true });
+                        }
+                      }}
+                      value={(() => {
+                        const matches = classes.find(c => c.name === `${watchClassName}-${watchSection}` || c.name === watchClassName);
+                        return matches ? matches.name : "";
+                      })()}
+                    >
+                      <option value="">Select Class Group</option>
+                      {classes.map((cls) => (
+                        <option key={cls._id} value={cls.name}>
+                          {cls.name}
+                        </option>
+                      ))}
+                    </select>
                     {errors.className && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.className.message}</p>}
-                  </div>
-
-                  {/* Section */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Section *</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. A"
-                      className={cn(
-                        "w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-semibold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all",
-                        errors.section && "border-red-200 bg-red-50/30"
-                      )}
-                      {...register("section", { required: "Section is required" })}
-                    />
-                    {errors.section && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.section.message}</p>}
                   </div>
 
                   {/* Session */}
@@ -477,8 +720,53 @@ const AddStudent = () => {
                     </select>
                   </div>
 
+                  {/* Admission Date */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Admission Date *</label>
+                    <input
+                      type="date"
+                      className={cn(
+                        "w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-semibold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all",
+                        errors.admissionDate && "border-red-200 bg-red-50/30"
+                      )}
+                      {...register("admissionDate", { required: "Admission date is required" })}
+                    />
+                    {errors.admissionDate && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.admissionDate.message}</p>}
+                  </div>
+
+                  {/* Fee Discount */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Fee Discount (%)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 10"
+                      min="0"
+                      max="100"
+                      className={cn(
+                        "w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-semibold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all",
+                        errors.discountPercentage && "border-red-200 bg-red-50/30"
+                      )}
+                      {...register("discountPercentage", {
+                        min: { value: 0, message: "Discount cannot be negative" },
+                        max: { value: 100, message: "Discount cannot exceed 100" }
+                      })}
+                    />
+                    {errors.discountPercentage && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.discountPercentage.message}</p>}
+                  </div>
+
+                  {/* Previous School */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Previous School Details</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Saint Mary Convent"
+                      className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-semibold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all"
+                      {...register("previousSchool")}
+                    />
+                  </div>
+
                   {/* Hostel Required */}
-                  <div className="flex items-center gap-3 md:col-span-2 md:pt-8 pl-1">
+                  <div className="flex items-center gap-3 md:col-span-3 md:pt-4 pl-1">
                     <input
                       type="checkbox"
                       id="hostelRequired"
@@ -689,7 +977,7 @@ const AddStudent = () => {
                   loading={loading}
                   className="h-12 rounded-2xl px-7 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-100"
                 >
-                  Submit Registration
+                  {isEditMode ? "Save Changes" : "Submit Registration"}
                 </Button>
               )}
             </div>

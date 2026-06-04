@@ -91,6 +91,26 @@ const studentSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    class: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Class',
+      index: true,
+    },
+    admissionDate: {
+      type: Date,
+      default: Date.now,
+    },
+    discountPercentage: {
+      type: Number,
+      default: 0,
+      min: [0, 'Discount cannot be negative'],
+      max: [100, 'Discount cannot exceed 100%'],
+    },
+    previousSchool: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     session: {
       type: String,
       required: [true, 'Academic session is required (e.g. 2026-2027)'],
@@ -145,6 +165,11 @@ const studentSchema = new mongoose.Schema(
       default: 'Active',
       index: true,
     },
+    customFields: {
+      type: Map,
+      of: String,
+      default: {},
+    },
   },
   {
     timestamps: true, // Auto-generates createdAt and updatedAt timestamps
@@ -184,7 +209,7 @@ studentSchema.pre('save', async function () {
       studentId: this.studentId,
       fullName: this.fullName,
       class: this.className,
-      schoolName: 'LBS Public School'
+      schoolName: 'Little Flower English School'
     });
 
     // Write QR to file using qrcode npm package
@@ -200,7 +225,7 @@ studentSchema.pre('save', async function () {
     this.qrCode = `/uploads/students/${qrFileName}`;
     
     // Barcode placeholder fallback
-    if (!this.barcode) this.barcode = `LBS-BAR-${this.studentId}`;
+    if (!this.barcode) this.barcode = `LFES-BAR-${this.studentId}`;
   } catch (err) {
     throw err;
   }

@@ -6,6 +6,7 @@
  */
 
 const Student = require('../models/Student');
+const Class = require('../models/Class');
 const FeeLedger = require('../models/FeeLedger');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
@@ -20,9 +21,13 @@ const getAllStudents = async (req, res, next) => {
 
     // Build filter object
     const filter = {};
-    if (grade) filter.className = grade;
-    if (className) filter.className = className;
-    if (classQuery) filter.className = classQuery;
+    const cls = grade || className || classQuery;
+    if (cls) {
+      filter.$or = [
+        { className: cls },
+        { grade: cls }
+      ];
+    }
     if (section) filter.section = section;
     if (isActive !== undefined) {
       if (isActive === 'true') {
@@ -83,7 +88,29 @@ const getStudentById = async (req, res, next) => {
  */
 const createStudent = async (req, res, next) => {
   try {
+    // Find matching class and link it
+    if (req.body.className) {
+      const classFullName = req.body.section 
+        ? `${req.body.className}-${req.body.section}` 
+        : req.body.className;
+      let targetClass = await Class.findOne({ name: classFullName });
+      if (!targetClass) {
+        targetClass = await Class.findOne({ name: req.body.className });
+      }
+      if (targetClass) {
+        req.body.class = targetClass._id;
+      }
+    }
+
     const student = await Student.create(req.body);
+
+    // If class reference is found, push student to class.students array
+    if (student.class) {
+      await Class.findByIdAndUpdate(student.class, {
+        $addToSet: { students: student._id }
+      });
+    }
+
     return successResponse(res, student, 'Student created successfully', 201);
   } catch (error) {
     next(error);
@@ -97,13 +124,47 @@ const createStudent = async (req, res, next) => {
  */
 const updateStudent = async (req, res, next) => {
   try {
+    const oldStudent = await Student.findById(req.params.id);
+    if (!oldStudent) {
+      return errorResponse(res, 'Student not found', 404);
+    }
+
+    // Resolve class if className or section is modified
+    if (req.body.className !== undefined || req.body.section !== undefined) {
+      const className = req.body.className !== undefined ? req.body.className : oldStudent.className;
+      const section = req.body.section !== undefined ? req.body.section : oldStudent.section;
+      
+      const classFullName = section ? `${className}-${section}` : className;
+      let targetClass = await Class.findOne({ name: classFullName });
+      if (!targetClass) {
+        targetClass = await Class.findOne({ name: className });
+      }
+
+      if (targetClass) {
+        req.body.class = targetClass._id;
+      }
+    }
+
     const student = await Student.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
 
-    if (!student) {
-      return errorResponse(res, 'Student not found', 404);
+    // If class has changed, remove from old class and add to new class
+    if (oldStudent.class && student.class && oldStudent.class.toString() !== student.class.toString()) {
+      // Remove from old class
+      await Class.findByIdAndUpdate(oldStudent.class, {
+        $pull: { students: student._id }
+      });
+      // Add to new class
+      await Class.findByIdAndUpdate(student.class, {
+        $addToSet: { students: student._id }
+      });
+    } else if (!oldStudent.class && student.class) {
+      // Add to new class
+      await Class.findByIdAndUpdate(student.class, {
+        $addToSet: { students: student._id }
+      });
     }
 
     return successResponse(res, student, 'Student updated successfully');
@@ -169,7 +230,9 @@ const getStudentProfile = async (req, res, next) => {
         studentId: student.studentId,
         rollNumber: student.rollNumber,
         admissionNumber: student.admissionNumber,
-        admissionDate: student.createdAt,
+        admissionDate: student.admissionDate || student.createdAt,
+        discountPercentage: student.discountPercentage || 0,
+        previousSchool: student.previousSchool || '',
         status: student.status,
         gender: student.gender,
         dob: student.dob,
@@ -177,9 +240,10 @@ const getStudentProfile = async (req, res, next) => {
         bloodGroup: student.bloodGroup,
         qrCode: student.qrCode,
         barcode: student.barcode,
+        customFields: student.customFields || {},
       },
       academicDetails: {
-        className: student.className,
+        className: student.className || student.grade || 'N/A',
         section: student.section,
         session: student.session,
       },

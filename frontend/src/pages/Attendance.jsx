@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Calendar,
   Users,
@@ -32,6 +33,8 @@ const Attendance = () => {
   const [loading, setLoading] = useState(false);
   const [students, setStudents] = useState([]);
 
+  const location = useLocation();
+
   useEffect(() => {
     const fetchClasses = async () => {
       try {
@@ -43,7 +46,11 @@ const Attendance = () => {
         if (res.data.success) {
           const classData = res.data.data;
           setClasses(classData);
-          if (classData.length > 0) {
+          
+          const stateClassId = location.state?.classId;
+          if (stateClassId && classData.some(c => c._id === stateClassId)) {
+            setSelectedClass(stateClassId);
+          } else if (classData.length > 0) {
             setSelectedClass(classData[0]._id);
           }
         }
@@ -52,7 +59,7 @@ const Attendance = () => {
       }
     };
     fetchClasses();
-  }, []);
+  }, [location.state]);
 
   useEffect(() => {
     if (!selectedClass) return;

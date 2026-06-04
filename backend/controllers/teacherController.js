@@ -162,16 +162,20 @@ const deleteTeacher = async (req, res, next) => {
  */
 const getTeacherDashboardStats = async (req, res, next) => {
   try {
-    const teacher = await Teacher.findOne({ user: req.user.id });
+    const teacher = await Teacher.findOne({ user: req.user._id });
     if (!teacher) {
       return errorResponse(res, 'Teacher profile not found', 404);
     }
 
-    const classes = await Class.find({ teacher: teacher._id });
-    const classIds = classes.map(c => c._id);
+    // Robustly fetch all unique classes assigned to this teacher
+    const timetableService = require('../services/timetableService');
+    const assignedClassesList = await timetableService.getTeacherAssignedClasses(req.user._id);
+    const classIds = assignedClassesList.map(c => c._id);
+
+    // Fetch full Class documents for the assigned classes to calculate student counts
+    const classes = await Class.find({ _id: { $in: classIds } });
     
     // Total Students across all assigned classes
-    // Note: Class model has students array (IDs)
     const totalStudents = classes.reduce((acc, c) => acc + (c.students ? c.students.length : 0), 0);
 
     // Today's Attendance Summary

@@ -36,7 +36,7 @@ const feeLedgerSchema = new mongoose.Schema(
         },
         status: {
           type: String,
-          enum: ["PAID", "PARTIAL", "UNPAID"],
+          enum: ["PAID", "PARTIAL", "UNPAID", "EXEMPTED"],
           default: "UNPAID",
         },
         paidOn: {
@@ -69,7 +69,10 @@ feeLedgerSchema.index({ studentId: 1, academicYear: 1 }, { unique: true });
 feeLedgerSchema.pre('save', async function () {
   if (this.monthlyFees && this.monthlyFees.length > 0) {
     this.monthlyFees.forEach((month) => {
-      if (month.paidAmount >= month.amount) {
+      if (month.status === "EXEMPTED") {
+        month.amount = 0;
+        month.paidAmount = 0;
+      } else if (month.paidAmount >= month.amount) {
         month.status = "PAID";
       } else if (month.paidAmount > 0) {
         month.status = "PARTIAL";

@@ -82,7 +82,7 @@ const StudentProfile = () => {
   const { personalDetails, academicDetails, contactDetails, feeSummary } = data;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] animate-in fade-in duration-700 pb-12 print:bg-white print:p-0">
+    <div className="min-h-screen bg-gray-50 animate-in fade-in duration-700 pb-12 print:bg-white print:p-0">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8 space-y-6">
         {/* 1. Header & Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
@@ -131,7 +131,7 @@ const StudentProfile = () => {
         {/* 2. Identity Card */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-4 sm:gap-6 text-center sm:text-left">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-[#4A90E2] to-[#50E3C2] rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg border-4 border-white shrink-0">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-indigo-500 via-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg border-4 border-white shrink-0">
               {(personalDetails?.name || "??")
                 .split(" ")
                 .map((n) => n[0])
@@ -150,11 +150,11 @@ const StudentProfile = () => {
                   Class: {academicDetails?.className}
                   <sup>th</sup> {academicDetails?.section}
                 </span>
-                <span
+                 <span
                   className={cn(
                     "px-3 py-1 rounded-lg text-[10px] sm:text-xs font-bold text-white uppercase tracking-tight whitespace-nowrap",
                     personalDetails?.status === "active"
-                      ? "bg-[#5E9E64]"
+                      ? "bg-emerald-600"
                       : "bg-rose-500",
                   )}
                 >
@@ -171,8 +171,8 @@ const StudentProfile = () => {
             Finance Overview
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            <div className="bg-[#F8FAFC] rounded-xl border border-gray-100 p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
-              <div className="w-10 sm:w-12 h-10 sm:h-12 bg-white rounded-full border border-gray-100 flex items-center justify-center text-gray-400 group-hover:text-blue-500 transition-colors shadow-sm shrink-0">
+            <div className="bg-gray-50 rounded-xl border border-gray-100 p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+              <div className="w-10 sm:w-12 h-10 sm:h-12 bg-white rounded-full border border-gray-100 flex items-center justify-center text-gray-400 group-hover:text-indigo-600 transition-colors shadow-sm shrink-0">
                 <span className="text-lg sm:text-xl font-bold">₹</span>
               </div>
               <div className="flex-1 min-w-0">
@@ -190,27 +190,27 @@ const StudentProfile = () => {
               </div>
             </div>
 
-            <div className="bg-[#F1F9F6] rounded-xl border border-[#E1F2ED] p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
-              <div className="w-10 sm:w-12 h-10 sm:h-12 bg-white rounded-full border border-[#E1F2ED] flex items-center justify-center text-[#5E9E64] transition-colors shadow-sm shrink-0">
+            <div className="bg-emerald-50 rounded-xl border border-emerald-100 p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+              <div className="w-10 sm:w-12 h-10 sm:h-12 bg-white rounded-full border border-emerald-100 flex items-center justify-center text-emerald-600 transition-colors shadow-sm shrink-0">
                 <CheckCircle2 size={24} className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[9px] sm:text-[10px] font-bold text-[#5E9E64] uppercase tracking-widest mb-1 truncate">
+                <p className="text-[9px] sm:text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1 truncate">
                   Total Paid
                 </p>
                 <div className="flex items-end gap-2 sm:gap-3">
-                  <span className="text-xl sm:text-2xl font-bold text-[#5E9E64] truncate">
+                  <span className="text-xl sm:text-2xl font-bold text-emerald-600 truncate">
                     ₹ {feeSummary?.totalPaid.toLocaleString()}
                   </span>
                 </div>
-                <p className="text-[9px] sm:text-[10px] font-bold text-[#5E9E64] mt-1">
+                <p className="text-[9px] sm:text-[10px] font-bold text-emerald-600 mt-1">
                   ₹ {feeSummary?.totalPaid.toLocaleString()}
                 </p>
               </div>
             </div>
 
-            <div className="bg-[#FEF2F2] rounded-xl border border-[#FEE2E2] p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
-              <div className="w-10 sm:w-12 h-10 sm:h-12 bg-white rounded-full border border-[#FEE2E2] flex items-center justify-center text-rose-500 transition-colors shadow-sm shrink-0">
+            <div className="bg-rose-50 rounded-xl border border-rose-100 p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+              <div className="w-10 sm:w-12 h-10 sm:h-12 bg-white rounded-full border border-rose-100 flex items-center justify-center text-rose-500 transition-colors shadow-sm shrink-0">
                 <AlertCircle
                   size={24}
                   strokeWidth={3}
@@ -329,7 +329,7 @@ const StudentProfile = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-[#F8FAFC]">
+                  <tr className="bg-gray-50">
                     <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                       Month
                     </th>
@@ -367,26 +367,26 @@ const StudentProfile = () => {
                           className={cn(
                             "px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-tight inline-flex items-center gap-1 border",
                             fee.status === "PAID"
-                              ? "bg-[#E6F4EA] text-[#1E7E34] border-[#CEEAD6]"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                               : fee.status === "PARTIAL"
-                                ? "bg-[#FFF4E5] text-[#B45309] border-[#FFEBCC]"
-                                : "bg-[#FEE2E2] text-rose-600 border-[#FECACA]",
+                                ? "bg-amber-50 text-amber-700 border-amber-100"
+                                : "bg-rose-50 text-rose-700 border-rose-100",
                           )}
                         >
                           <span
                             className={cn(
                               "w-1 h-1 rounded-full",
                               fee.status === "PAID"
-                                ? "bg-[#1E7E34]"
+                                ? "bg-emerald-600"
                                 : fee.status === "PARTIAL"
-                                  ? "bg-[#F59E0B]"
+                                  ? "bg-amber-500"
                                   : "bg-rose-500",
                             )}
                           />
                           {fee.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right text-xs font-bold text-[#4B5563] uppercase">
+                      <td className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase">
                         {fee.paidOn
                           ? new Date(fee.paidOn).toLocaleDateString(undefined, {
                               day: "2-digit",

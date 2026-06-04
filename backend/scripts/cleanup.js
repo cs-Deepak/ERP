@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const mongoose = require('mongoose');
 
@@ -8,10 +9,35 @@ const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
 const Class = require('../models/Class');
 const FeeTransaction = require('../models/FeeTransaction');
+const FeeLedger = require('../models/FeeLedger');
 const Attendance = require('../models/Attendance');
 const Subject = require('../models/Subject');
 const ClassSubject = require('../models/ClassSubject');
 const Timetable = require('../models/Timetable');
+const Counter = require('../models/Counter');
+
+// Helper function to clear files in directory while keeping directory structure and .gitkeep
+const clearDirectory = (dirPath) => {
+  if (fs.existsSync(dirPath)) {
+    const files = fs.readdirSync(dirPath);
+    let deletedCount = 0;
+    for (const file of files) {
+      if (file === '.gitkeep') continue;
+      const curPath = path.join(dirPath, file);
+      if (fs.lstatSync(curPath).isFile()) {
+        try {
+          fs.unlinkSync(curPath);
+          deletedCount++;
+        } catch (err) {
+          console.error(`Error deleting file ${file}:`, err);
+        }
+      }
+    }
+    console.log(`Cleared ${deletedCount} files from directory: ${dirPath}`);
+  } else {
+    console.log(`Directory does not exist, skipping: ${dirPath}`);
+  }
+};
 
 const cleanupData = async () => {
   try {
@@ -30,14 +56,20 @@ const cleanupData = async () => {
       Student.deleteMany({}),
       Class.deleteMany({}),
       FeeTransaction.deleteMany({}),
+      FeeLedger.deleteMany({}),
       Attendance.deleteMany({}),
       Subject.deleteMany({}),
       ClassSubject.deleteMany({}),
       Timetable.deleteMany({}),
+      Counter.deleteMany({}),
     ]);
-    console.log('Cleared all school ERP collections.');
+    console.log('Cleared all school ERP database collections.');
 
-    // 3. Recreate Default Admin
+    // 3. Clear Uploaded Files (QR codes and PDF receipts)
+    clearDirectory(path.join(__dirname, '../uploads/students'));
+    clearDirectory(path.join(__dirname, '../uploads/receipts'));
+
+    // 4. Recreate Default Admin
     // This ensures the user can still log in after cleanup
     const adminUser = await User.create({
       name: 'Little Flower Administrator',

@@ -20,25 +20,75 @@ class FeeService {
     let ledger = await FeeLedger.findOne({ studentId, academicYear });
 
     if (!ledger) {
+      let finalTuitionFee = tuitionFee;
+      let studentAdmissionDate = null;
+
+      const student = await Student.findById(studentId);
+      if (student) {
+        const discount = student.discountPercentage || 0;
+        finalTuitionFee = Math.round(tuitionFee * (1 - (discount / 100)));
+        studentAdmissionDate = student.admissionDate || student.createdAt || null;
+      }
+
       const months = [
         'April', 'May', 'June', 'July', 'August', 'September',
         'October', 'November', 'December', 'January', 'February', 'March'
       ];
 
-      const monthlyFees = months.map(m => ({
-        month: m,
-        amount: tuitionFee,
-        paidAmount: 0,
-        status: 'UNPAID'
-      }));
+      const startYear = parseInt(academicYear.split('-')[0]);
+
+      const monthMapping = {
+        'April': { idx: 3, offset: 0 },
+        'May': { idx: 4, offset: 0 },
+        'June': { idx: 5, offset: 0 },
+        'July': { idx: 6, offset: 0 },
+        'August': { idx: 7, offset: 0 },
+        'September': { idx: 8, offset: 0 },
+        'October': { idx: 9, offset: 0 },
+        'November': { idx: 10, offset: 0 },
+        'December': { idx: 11, offset: 0 },
+        'January': { idx: 0, offset: 1 },
+        'February': { idx: 1, offset: 1 },
+        'March': { idx: 2, offset: 1 }
+      };
+
+      const monthlyFees = months.map(m => {
+        let status = 'UNPAID';
+        let amount = finalTuitionFee;
+
+        if (studentAdmissionDate && !isNaN(startYear)) {
+          const mapping = monthMapping[m];
+          const monthYear = startYear + mapping.offset;
+          const monthIdx = mapping.idx;
+
+          const admDate = new Date(studentAdmissionDate);
+          const admYear = admDate.getFullYear();
+          const admMonth = admDate.getMonth(); // 0-indexed
+
+          // If the month-year is BEFORE the student's admission month-year
+          if (monthYear < admYear || (monthYear === admYear && monthIdx < admMonth)) {
+            status = 'EXEMPTED';
+            amount = 0;
+          }
+        }
+
+        return {
+          month: m,
+          amount,
+          paidAmount: 0,
+          status
+        };
+      });
+
+      const totalFee = monthlyFees.reduce((acc, curr) => acc + curr.amount, 0);
 
       ledger = await FeeLedger.create({
         studentId,
         academicYear,
         monthlyFees,
-        totalFee: tuitionFee * 12,
+        totalFee,
         totalPaid: 0,
-        pendingAmount: tuitionFee * 12
+        pendingAmount: totalFee
       });
     }
     return ledger;
@@ -59,7 +109,7 @@ class FeeService {
     }
 
     // 2. Fetch or initialize Fee Ledger for the student
-    const academicYear = '2025-26'; 
+    const academicYear = student.session || '2026-2027'; 
     const ledger = await this.ensureFeeLedger(
       student._id, 
       academicYear, 
@@ -75,7 +125,7 @@ class FeeService {
     return {
       student: {
         id: student._id,
-        fullName: student.firstName + ' ' + (student.lastName || ''),
+        fullName: student.fullName,
         class: student.class.name,
         rollNumber: student.rollNumber
       },
@@ -130,8 +180,10 @@ class FeeService {
         paymentMode
       });
 
-      // 3. Update the FeeLedger (ensure it exists)
-      const ledger = await this.ensureFeeLedger(studentId, academicYear);
+      // 3. Update the FeeLedger (ensure it exists with student's class tuition fee)
+      const student = await Student.findById(studentId).populate('class');
+      const tuitionFee = student?.class?.tuitionFee || 0;
+      const ledger = await this.ensureFeeLedger(studentId, academicYear, tuitionFee);
 
       // Find the month entry in the array
       const monthIndex = ledger.monthlyFees.findIndex(m => m.month === month);

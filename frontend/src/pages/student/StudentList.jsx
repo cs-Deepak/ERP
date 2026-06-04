@@ -11,7 +11,10 @@ import {
   List,
   ChevronDown,
   Contact2,
+  FileText,
+  FileSpreadsheet,
 } from "lucide-react";
+import { jsPDF } from "jspdf";
 import Button from "../../components/ui/Button";
 import Skeleton, { TableSkeleton } from "../../components/ui/Skeleton";
 import EmptyState from "../../components/ui/EmptyState";
@@ -49,6 +52,341 @@ const StudentList = () => {
   const [totalStudents, setTotalStudents] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Export handlers
+  const exportToExcel = async () => {
+    try {
+      setIsProcessing(true);
+      const params = {
+        limit: 1000,
+        page: 1
+      };
+      
+      if (filterClass !== "all") {
+        if (filterClass.includes("-")) {
+          const [clsName, secName] = filterClass.split("-");
+          params.className = clsName;
+          params.section = secName;
+        } else {
+          params.className = filterClass;
+        }
+      }
+      if (filterSection !== "all") {
+        params.section = filterSection;
+      }
+      if (filterStatus !== "all") {
+        params.isActive = filterStatus === "active" ? "true" : "false";
+      }
+
+      const res = await api.get("/students", { params });
+      if (!res.data.success || !res.data.data.students || res.data.data.students.length === 0) {
+        addToast("No student records found to export", "warning");
+        return;
+      }
+
+      const allStudents = res.data.data.students;
+
+      // CSV Escaping
+      const csvEscape = (val) => {
+        if (val === null || val === undefined) return '""';
+        let str = String(val);
+        str = str.replace(/"/g, '""');
+        return `"${str}"`;
+      };
+
+      const csvRows = [];
+      
+      let displayClass = filterClass;
+      let displaySection = "";
+      if (filterClass.includes("-")) {
+        const parts = filterClass.split("-");
+        displayClass = parts[0];
+        displaySection = `Section ${parts[1]}`;
+      }
+
+      // Top Headers (Template style)
+      csvRows.push([csvEscape("LITTLE FLOWER ENGLISH SCHOOL"), "", "", "", "", "", "", "", "", ""]);
+      csvRows.push([csvEscape(`CLASS ROSTER: Class ${displayClass} ${displaySection ? `(${displaySection})` : ''}`.trim()), "", "", "", "", "", "", "", "", ""]);
+      const sessionVal = allStudents[0]?.session || "2026-2027";
+      csvRows.push([
+        csvEscape(`Academic Session: ${sessionVal}`),
+        csvEscape(`Total Students: ${allStudents.length}`),
+        csvEscape(`Generated: ${new Date().toLocaleDateString('en-IN')}`),
+        "", "", "", "", "", "", ""
+      ]);
+      csvRows.push(["", "", "", "", "", "", "", "", "", ""]); // separator
+      
+      const headers = [
+        "Roll No",
+        "Student ID",
+        "Admission No",
+        "Full Name",
+        "Father's Name",
+        "Mother's Name",
+        "Mobile Number",
+        "Address",
+        "Admission Date",
+        "Discount (%)",
+        "Status"
+      ];
+      csvRows.push(headers.map(h => csvEscape(h)));
+
+      allStudents.forEach((student) => {
+        const admDate = student.admissionDate 
+          ? new Date(student.admissionDate).toLocaleDateString('en-IN') 
+          : "N/A";
+        const parentsMobile = student.emergencyContact || student.phone || "N/A";
+        
+        const row = [
+          student.rollNumber || "N/A",
+          student.studentId || "PENDING",
+          student.admissionNumber || "N/A",
+          student.fullName || "N/A",
+          student.fatherName || "N/A",
+          student.motherName || "N/A",
+          parentsMobile,
+          student.address || "N/A",
+          admDate,
+          student.discountPercentage !== undefined ? `${student.discountPercentage}%` : "0%",
+          student.status || "Active"
+        ];
+        csvRows.push(row.map(cell => csvEscape(cell)));
+      });
+
+      const csvContent = csvRows.map(e => e.join(",")).join("\n");
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `LFES_${filterClass.replace(/\s+/g, '_')}_Roster_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      addToast("Excel/CSV export completed successfully!", "success");
+    } catch (err) {
+      console.error("CSV Export failed:", err);
+      addToast("Failed to export class roster to CSV", "error");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const exportToPDF = async () => {
+    try {
+      setIsProcessing(true);
+      const params = {
+        limit: 1000,
+        page: 1
+      };
+      
+      if (filterClass !== "all") {
+        if (filterClass.includes("-")) {
+          const [clsName, secName] = filterClass.split("-");
+          params.className = clsName;
+          params.section = secName;
+        } else {
+          params.className = filterClass;
+        }
+      }
+      if (filterSection !== "all") {
+        params.section = filterSection;
+      }
+      if (filterStatus !== "all") {
+        params.isActive = filterStatus === "active" ? "true" : "false";
+      }
+
+      const res = await api.get("/students", { params });
+      if (!res.data.success || !res.data.data.students || res.data.data.students.length === 0) {
+        addToast("No student records found to export", "warning");
+        return;
+      }
+
+      const allStudents = res.data.data.students;
+
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const totalPagesExp = "{total_pages_count}";
+
+      const drawPageDecorations = (pageNumber) => {
+        // Top orange/coral accent bar
+        doc.setFillColor(232, 93, 42); // #e85d2a
+        doc.rect(0, 0, 210, 6, "F");
+
+        // School Letterhead
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.setTextColor(43, 27, 23); // #2b1b17
+        doc.text("LITTLE FLOWER ENGLISH SCHOOL", 105, 18, { align: "center" });
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(136, 124, 103); // #887c67
+        doc.text("Educating for Excellence  |  Official Student Directory", 105, 23, { align: "center" });
+
+        // Thin Separator Line
+        doc.setDrawColor(233, 226, 211); // #e9e2d3
+        doc.setLineWidth(0.3);
+        doc.line(12, 26, 198, 26);
+      };
+
+      const drawTableHeader = (startY) => {
+        // Table Header fill
+        doc.setFillColor(238, 222, 191); // #eedebf
+        doc.rect(12, startY, 186, 8, "F");
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.5);
+        doc.setTextColor(43, 27, 23); // #2b1b17
+
+        doc.text("Roll", 14, startY + 5.5);
+        doc.text("Student ID / Adm", 23, startY + 5.5);
+        doc.text("Full Name / Disc.", 59, startY + 5.5);
+        doc.text("Parents (F/M)", 90, startY + 5.5);
+        doc.text("Mobile No", 122, startY + 5.5);
+        doc.text("Address", 143, startY + 5.5);
+        doc.text("Status", 181, startY + 5.5);
+      };
+
+      const drawFooter = (pageNum) => {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(168, 157, 135); // #a89d87
+        doc.text(`Page ${pageNum} of ${totalPagesExp}`, 105, 287, { align: "center" });
+        doc.text("Meerut Road, Little Flower Campus, Siwan, Bihar - 841506", 12, 287);
+        doc.text("Confidential School Record", 198, 287, { align: "right" });
+      };
+
+      let pageNum = 1;
+      drawPageDecorations(pageNum);
+
+      let displayClass = filterClass;
+      let displaySection = "All Sections";
+      if (filterClass.includes("-")) {
+        const parts = filterClass.split("-");
+        displayClass = parts[0];
+        displaySection = `Section ${parts[1]}`;
+      }
+
+      // Metadata card
+      doc.setFillColor(253, 253, 251); // #fdfdfb
+      doc.setDrawColor(233, 226, 211);
+      doc.rect(12, 30, 186, 15, "FD");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(43, 27, 23);
+      doc.text(`Class: ${displayClass}`, 16, 35.5);
+      doc.text(`Section: ${displaySection}`, 16, 40.5);
+
+      const sessionVal = allStudents[0]?.session || "2026-2027";
+      doc.text(`Session: ${sessionVal}`, 85, 35.5);
+      doc.text(`Total Students: ${allStudents.length}`, 85, 40.5);
+
+      doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, 145, 35.5);
+      doc.text(`Status Filter: ${filterStatus === 'all' ? 'All Records' : filterStatus === 'active' ? 'Active Only' : 'Inactive Only'}`, 145, 40.5);
+
+      let y = 51;
+      drawTableHeader(y);
+      y += 8;
+
+      const rowHeight = 11;
+
+      allStudents.forEach((student, index) => {
+        if (y + rowHeight > 272) {
+          drawFooter(pageNum);
+          doc.addPage();
+          pageNum++;
+          drawPageDecorations(pageNum);
+          y = 32;
+          drawTableHeader(y);
+          y += 8;
+        }
+
+        if (index % 2 === 1) {
+          doc.setFillColor(253, 253, 251);
+          doc.rect(12, y, 186, rowHeight, "F");
+        }
+
+        doc.setDrawColor(245, 242, 233);
+        doc.setLineWidth(0.2);
+        doc.line(12, y + rowHeight, 198, y + rowHeight);
+
+        const admDate = student.admissionDate 
+          ? new Date(student.admissionDate).toLocaleDateString('en-IN') 
+          : "N/A";
+
+        // Draw Line 1
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.5);
+        doc.setTextColor(43, 27, 23);
+        doc.text(student.rollNumber || "N/A", 14, y + 4.5);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text(student.studentId || "PENDING", 23, y + 4.5);
+
+        doc.setFont("helvetica", "bold");
+        doc.text(student.fullName || "N/A", 59, y + 4.5);
+
+        doc.setFont("helvetica", "normal");
+        doc.text(`F: ${student.fatherName || "N/A"}`, 90, y + 4.5);
+        
+        doc.text(student.emergencyContact || "N/A", 122, y + 4.5);
+
+        const fullAddr = student.address || "N/A";
+        const addrPart1 = fullAddr.substring(0, 26);
+        const addrPart2 = fullAddr.length > 26 ? fullAddr.substring(26, 52) : "";
+        doc.text(addrPart1, 143, y + 4.5);
+
+        const isStudentActive = (student.status || "Active").toLowerCase() === "active";
+        if (isStudentActive) {
+          doc.setTextColor(29, 138, 67); // Emerald 600
+        } else {
+          doc.setTextColor(207, 79, 32); // Orange/Red 700
+        }
+        doc.setFont("helvetica", "bold");
+        doc.text(student.status || "Active", 181, y + 4.5);
+
+        // Draw Line 2
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7.5);
+        doc.setTextColor(136, 124, 103);
+        
+        doc.text(`Adm: ${admDate}`, 23, y + 9);
+        doc.text(`Disc: ${student.discountPercentage || 0}%`, 59, y + 9);
+        doc.text(`M: ${student.motherName || "N/A"}`, 90, y + 9);
+        
+        if (student.phone && student.phone !== student.emergencyContact) {
+          doc.text(`Alt: ${student.phone}`, 122, y + 9);
+        }
+
+        if (addrPart2) {
+          doc.text(addrPart2, 143, y + 9);
+        }
+
+        y += rowHeight;
+      });
+
+      drawFooter(pageNum);
+
+      if (typeof doc.putTotalPages === "function") {
+        doc.putTotalPages(totalPagesExp);
+      }
+
+      doc.save(`LFES_${filterClass.replace(/\s+/g, '_')}_Roster_${Date.now()}.pdf`);
+      addToast("PDF export completed successfully!", "success");
+    } catch (err) {
+      console.error("PDF Export failed:", err);
+      addToast("Failed to export class roster to PDF", "error");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   // Dynamic API host resolution for static assets (studentPhoto)
   const apiHost = api.defaults.baseURL ? api.defaults.baseURL.replace('/api', '') : "";
 
@@ -61,7 +399,13 @@ const StudentList = () => {
       };
 
       if (filterClass !== "all") {
-        params.className = filterClass;
+        if (filterClass.includes("-")) {
+          const [clsName, secName] = filterClass.split("-");
+          params.className = clsName;
+          params.section = secName;
+        } else {
+          params.className = filterClass;
+        }
       }
 
       if (filterSection !== "all") {
@@ -200,7 +544,7 @@ const StudentList = () => {
           </div>
 
           {/* Filter: Class */}
-          <div className="lg:col-span-2.5 relative group">
+          <div className="lg:col-span-3.5 relative group">
             <Filter
               className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
               size={16}
@@ -223,27 +567,8 @@ const StudentList = () => {
             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
           </div>
 
-          {/* Filter: Section */}
-          <div className="lg:col-span-2 relative group">
-            <select
-              className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50/50 focus:bg-white outline-none appearance-none cursor-pointer transition-all"
-              value={filterSection}
-              onChange={(e) => {
-                setFilterSection(e.target.value);
-                setCurrentPage(1);
-              }}
-            >
-              <option value="all">All Sections</option>
-              <option value="A">Section A</option>
-              <option value="B">Section B</option>
-              <option value="C">Section C</option>
-              <option value="D">Section D</option>
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-          </div>
-
           {/* Filter: Status */}
-          <div className="lg:col-span-2 relative group">
+          <div className="lg:col-span-3 relative group">
             <select
               className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-50/50 focus:bg-white outline-none appearance-none cursor-pointer transition-all"
               value={filterStatus}
@@ -283,6 +608,38 @@ const StudentList = () => {
             </button>
           </div>
         </div>
+        
+        {/* Export buttons row - only visible when filterClass !== "all" */}
+        {filterClass !== "all" && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-100/70 animate-in fade-in duration-300">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                Class Export Options:
+              </span>
+              <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold border border-indigo-100/30 uppercase">
+                {filterClass}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                disabled={isProcessing}
+                onClick={exportToExcel}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/50 text-emerald-700 hover:text-emerald-800 rounded-xl text-xs font-black transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              >
+                <FileSpreadsheet size={15} />
+                <span>Export to Excel</span>
+              </button>
+              <button
+                disabled={isProcessing}
+                onClick={exportToPDF}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 border border-transparent text-white rounded-xl text-xs font-black transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              >
+                <FileText size={15} />
+                <span>Export to PDF</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 3. Main Directory */}

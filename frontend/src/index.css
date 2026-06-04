@@ -1,11 +1,42 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", "system-ui", "-apple-system", "sans-serif";
-  --color-indigo-50: #eef2ff;
-  --color-indigo-100: #e0e7ff;
-  --color-indigo-600: #4f46e5;
-  --color-indigo-700: #4338ca;
+  --font-sans: "Outfit", "system-ui", "-apple-system", "sans-serif";
+  
+  /* Primary Indigo mapping to vibrant orange/coral actions */
+  --color-indigo-50: #fcfbf7;
+  --color-indigo-100: #eedebf;
+  --color-indigo-200: #ecdcb9;
+  --color-indigo-300: #dcbfa0;
+  --color-indigo-500: #f28b57;
+  --color-indigo-600: #e85d2a;
+  --color-indigo-700: #cf4f20;
+  --color-indigo-800: #2b1b17;
+  --color-indigo-900: #201310;
+
+  /* Neutral Gray mapping to warm organic cream/beige/chocolate */
+  --color-gray-50: #fdfdfb;
+  --color-gray-100: #f5f2e9;
+  --color-gray-200: #e9e2d3;
+  --color-gray-300: #d6ccb9;
+  --color-gray-400: #a89d87;
+  --color-gray-500: #887c67;
+  --color-gray-600: #6b604e;
+  --color-gray-700: #524738;
+  --color-gray-800: #3a3024;
+  --color-gray-900: #2b1b17;
+
+  /* Emerald mapping to rich organic olive green */
+  --color-emerald-50: #f2faf4;
+  --color-emerald-100: #e6f6eb;
+  --color-emerald-600: #1d8a43;
+  --color-emerald-700: #176f35;
+
+  /* Amber mapping to vibrant gold/yellow */
+  --color-amber-50: #fffdf0;
+  --color-amber-100: #fff9c4;
+  --color-amber-500: #f9c80e;
+  --color-amber-600: #d8a605;
 }
 
 @layer base {

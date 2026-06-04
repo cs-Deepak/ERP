@@ -13,20 +13,8 @@ const PDFDocument = require('pdfkit');
  * (Either as primary teacher or subject teacher)
  */
 exports.isTeacherAssignedToClass = async (userId, classId) => {
-  // 1. Check if primary teacher
-  const cls = await Class.findById(classId);
-  if (cls && cls.teacher.toString() === userId.toString()) return true;
-
-  // 2. Check ClassSubject mappings
-  const teacher = await Teacher.findOne({ user: userId });
-  if (!teacher) return false;
-
-  const mapping = await ClassSubject.findOne({
-    class: classId,
-    teacher: teacher._id,
-  });
-
-  return !!mapping;
+  const assigned = await this.getTeacherAssignedClasses(userId);
+  return assigned.some(c => c._id.toString() === classId.toString());
 };
 
 /**
@@ -38,8 +26,13 @@ exports.getTeacherAssignedClasses = async (userId) => {
   const teacher = await Teacher.findOne({ user: userId });
   if (!teacher) return [];
 
-  // 1. Get classes where teacher is primary
-  const primaryClasses = await Class.find({ teacher: teacher._id }).select('name');
+  // 1. Get classes where teacher is primary (supports both User Account ID and Teacher Profile ID)
+  const primaryClasses = await Class.find({
+    $or: [
+      { teacher: teacher._id },
+      { teacher: teacher.user }
+    ]
+  }).select('name');
 
   // 2. Get classes from ClassSubject mappings
   const mappings = await ClassSubject.find({ teacher: teacher._id })
@@ -48,11 +41,17 @@ exports.getTeacherAssignedClasses = async (userId) => {
   
   const mappingClasses = mappings.map(m => m.class).filter(c => !!c);
 
+  // 3. Get classes by names from teacher.assignedClasses array
+  let assignedClassesByName = [];
+  if (teacher.assignedClasses && teacher.assignedClasses.length > 0) {
+    assignedClassesByName = await Class.find({ name: { $in: teacher.assignedClasses } }).select('name');
+  }
+
   // Merge and remove duplicates by ID
   const allClassIds = new Set();
   const uniqueClasses = [];
 
-  [...primaryClasses, ...mappingClasses].forEach(cls => {
+  [...primaryClasses, ...mappingClasses, ...assignedClassesByName].forEach(cls => {
     const idStr = cls._id.toString();
     if (!allClassIds.has(idStr)) {
       uniqueClasses.push({ _id: cls._id, name: cls.name });
@@ -202,9 +201,26 @@ exports.getTimetableByClass = async (classId) => {
 /**
  * Generates a professional PDF for the timetable
  */
-exports.generateTimetablePDF = async (classId, outStream) => {
+exports.generateTimetablePDF = async (classId, outStream, filterTeacherUserId = null) => {
   const timetable = await this.getTimetableByClass(classId);
   if (!timetable) throw new Error('Timetable not found');
+
+  let weeklySchedule = timetable.weeklySchedule;
+
+  if (filterTeacherUserId) {
+    const Teacher = require('../models/Teacher');
+    const teacher = await Teacher.findOne({ user: filterTeacherUserId });
+    if (teacher) {
+      weeklySchedule = weeklySchedule.map(dayData => {
+        const plainDay = dayData.toObject ? dayData.toObject() : dayData;
+        plainDay.slots = plainDay.slots.filter(slot => {
+          if (slot.type === 'Break') return true;
+          return slot.teacher && slot.teacher._id.toString() === teacher._id.toString();
+        });
+        return plainDay;
+      });
+    }
+  }
 
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
   doc.pipe(outStream);
@@ -230,7 +246,7 @@ exports.generateTimetablePDF = async (classId, outStream) => {
   let currentY = 190;
 
   // 4. Day-wise Table Design
-  timetable.weeklySchedule.forEach((dayData) => {
+  weeklySchedule.forEach((dayData) => {
     // Day Header
     doc.rect(40, currentY, 515, 20).fill('#2c5282');
     doc.fillColor('#ffffff').fontSize(11).text(dayData.day.toUpperCase(), 45, currentY + 5, { weight: 'bold' });

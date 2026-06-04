@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   UserSquare2,
@@ -119,82 +120,111 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-10">
-        {stats.map((stat, index) => (
-          <div
-            key={index}
-            className="group bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative"
-          >
-            {/* Background Accent */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-8">
+        {stats.map((stat, index) => {
+          let cardBgClass = "from-gray-50 via-white to-gray-50/30 border-gray-200/60 hover:border-gray-300";
+          let iconBgClass = "bg-gray-100 text-gray-700";
+          let textAccentClass = "text-gray-900";
+          let hoverShadowClass = "hover:shadow-gray-100/50";
+          
+          if (stat.color === "indigo") {
+            cardBgClass = "from-indigo-50/70 via-white to-indigo-50/20 border-indigo-100/50 hover:border-indigo-500/30";
+            iconBgClass = "bg-indigo-100/70 text-indigo-700";
+            textAccentClass = "text-indigo-700";
+            hoverShadowClass = "hover:shadow-indigo-100/20";
+          } else if (stat.color === "emerald") {
+            cardBgClass = "from-emerald-50/60 via-white to-emerald-50/20 border-emerald-100/60 hover:border-emerald-600/30";
+            iconBgClass = "bg-emerald-100/70 text-emerald-700";
+            textAccentClass = "text-emerald-750";
+            hoverShadowClass = "hover:shadow-emerald-100/20";
+          } else if (stat.color === "amber") {
+            cardBgClass = "from-amber-50/70 via-white to-amber-50/20 border-amber-100/60 hover:border-amber-500/30";
+            iconBgClass = "bg-amber-100/70 text-amber-700";
+            textAccentClass = "text-amber-700";
+            hoverShadowClass = "hover:shadow-amber-100/20";
+          } else if (stat.color === "rose") {
+            cardBgClass = "from-indigo-100/40 via-white to-indigo-50/20 border-indigo-100/80 hover:border-indigo-600/30";
+            iconBgClass = "bg-indigo-100/90 text-indigo-700 font-black";
+            textAccentClass = "text-indigo-600";
+            hoverShadowClass = "hover:shadow-indigo-100/20";
+          }
+
+          return (
             <div
+              key={index}
               className={cn(
-                "absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 rounded-full opacity-5 group-hover:scale-110 transition-transform duration-500",
-                stat.color === "indigo" && "bg-indigo-600",
-                stat.color === "emerald" && "bg-emerald-600",
-                stat.color === "amber" && "bg-amber-600",
-                stat.color === "rose" && "bg-rose-600",
+                "group bg-gradient-to-br p-6 rounded-[2rem] border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative",
+                cardBgClass,
+                hoverShadowClass
               )}
-            />
+            >
+              {/* Background Accent */}
+              <div
+                className={cn(
+                  "absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 rounded-full opacity-5 group-hover:scale-110 transition-transform duration-500",
+                  stat.color === "indigo" && "bg-indigo-600",
+                  stat.color === "emerald" && "bg-emerald-600",
+                  stat.color === "amber" && "bg-amber-600",
+                  stat.color === "rose" && "bg-rose-600",
+                )}
+              />
 
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-6">
-                <div
-                  className={cn(
-                    "w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-lg shadow-gray-100/50",
-                    stat.color === "indigo" && "bg-indigo-50 text-indigo-600",
-                    stat.color === "emerald" &&
-                      "bg-emerald-50 text-emerald-600",
-                    stat.color === "amber" && "bg-amber-50 text-amber-600",
-                    stat.color === "rose" && "bg-rose-50 text-rose-600",
-                  )}
-                >
-                  <stat.icon size={28} />
-                </div>
-                <div className="flex flex-col items-end">
-                  <span
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-6">
+                  <div
                     className={cn(
-                      "text-xs font-bold px-2.5 py-1 rounded-full",
-                      stat.change.startsWith("+")
-                        ? "text-emerald-700 bg-emerald-50"
-                        : "text-gray-500 bg-gray-50",
+                      "w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-lg shadow-gray-150/40",
+                      iconBgClass
                     )}
                   >
-                    {stat.change}
-                  </span>
-                  <span className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-wider">
-                    vs last month
-                  </span>
+                    <stat.icon size={28} />
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span
+                      className={cn(
+                        "text-xs font-bold px-2.5 py-1 rounded-full",
+                        stat.change.startsWith("+")
+                          ? "text-emerald-700 bg-emerald-50"
+                          : "text-gray-500 bg-gray-50",
+                      )}
+                    >
+                      {stat.change}
+                    </span>
+                    <span className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-wider">
+                      vs last month
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-1">
-                <p className="text-gray-500 text-sm font-semibold">
-                  {stat.label}
-                </p>
-                <div className="flex items-baseline gap-2">
-                  <h3
-                    className={cn(
-                      "text-3xl font-black text-gray-900",
-                      loading && "blur-sm animate-pulse",
-                    )}
-                  >
-                    {stat.value}
-                  </h3>
-                  <ArrowUpRight
-                    size={16}
-                    className="text-gray-300 group-hover:text-indigo-400 transition-colors"
-                  />
+                <div className="space-y-1">
+                  <p className="text-gray-500 text-sm font-semibold">
+                    {stat.label}
+                  </p>
+                  <div className="flex items-baseline gap-2">
+                    <h3
+                      className={cn(
+                        "text-3xl font-black text-gray-900",
+                        loading && "blur-sm animate-pulse",
+                      )}
+                    >
+                      {stat.value}
+                    </h3>
+                    <ArrowUpRight
+                      size={16}
+                      className="text-gray-300 group-hover:text-indigo-400 transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Attendance Chart Area */}
-        <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8 group overflow-hidden relative min-h-[400px]">
+        <div className="lg:col-span-2 bg-gradient-to-br from-white via-gray-50/30 to-gray-100/40 rounded-[2.5rem] border border-gray-200/60 shadow-sm p-8 group overflow-hidden relative min-h-[400px]">
           <div className="flex items-center justify-between mb-8">
             <h4 className="text-xl font-bold text-gray-900 tracking-tight">
               Financial Overview
@@ -213,8 +243,8 @@ const AdminDashboard = () => {
             <div className="w-full max-w-md h-48 bg-gradient-to-r from-indigo-50 via-indigo-200 to-indigo-50 rounded-full blur-3xl animate-pulse" />
           </div>
 
-          <div className="relative z-10 h-full flex flex-col items-center justify-center border-2 border-dashed border-gray-100 rounded-3xl text-gray-400 italic font-medium p-12 text-center">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+          <div className="relative z-10 h-full flex flex-col items-center justify-center border-2 border-dashed border-gray-200/80 rounded-3xl text-gray-400 italic font-medium p-12 text-center">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
               <CreditCard size={32} className="text-gray-200" />
             </div>
             Interactive Financial Chart Placeholder
@@ -239,10 +269,10 @@ const AdminDashboard = () => {
             </Button>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8">
+          <div className="bg-gradient-to-br from-white to-gray-50/50 rounded-[2.5rem] border border-gray-200/70 shadow-sm p-8">
             <h4 className="font-bold text-gray-900 mb-6 flex items-center justify-between">
               Critical Alerts
-              <span className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-[10px]">
+              <span className="w-6 h-6 bg-red-100 text-red-650 rounded-full flex items-center justify-center text-[10px] font-bold">
                 2
               </span>
             </h4>
@@ -263,7 +293,7 @@ const AdminDashboard = () => {
               ].map((alert, i) => (
                 <div
                   key={i}
-                  className="flex gap-4 p-4 rounded-2xl bg-gray-50/50 hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200 cursor-pointer"
+                  className="flex gap-4 p-4 rounded-2xl bg-white hover:bg-gray-100/50 transition-colors border border-gray-150 hover:border-gray-200 cursor-pointer"
                 >
                   <div
                     className={cn(
@@ -295,6 +325,7 @@ const AdminDashboard = () => {
 };
 
 const TeacherDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState([
     { label: "My Classes", value: "0", icon: BookOpen, color: "indigo" },
     { label: "Students", value: "0", icon: Users, color: "emerald" },
@@ -310,6 +341,7 @@ const TeacherDashboard = () => {
     absent: 0,
     total: 0,
   });
+  const [assignedClasses, setAssignedClasses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -345,6 +377,8 @@ const TeacherDashboard = () => {
           absent: data.attendanceSummary.absent,
           total: data.attendanceSummary.totalMarked,
         });
+
+        setAssignedClasses(data.assignedClasses || []);
       } catch (error) {
         console.error("Teacher Dashboard error:", error);
       } finally {
@@ -367,41 +401,58 @@ const TeacherDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat, index) => (
-          <div
-            key={index}
-            className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm transition-all hover:shadow-lg"
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <div
-                className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center",
-                  stat.color === "indigo" && "bg-indigo-50 text-indigo-600",
-                  stat.color === "emerald" && "bg-emerald-50 text-emerald-600",
-                  stat.color === "amber" && "bg-amber-50 text-amber-600",
-                )}
-              >
-                <stat.icon size={24} />
-              </div>
-              <div>
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">
-                  {stat.label}
-                </p>
-                <h3 className="text-2xl font-black text-gray-900">
-                  {stat.value}
-                </h3>
+        {stats.map((stat, index) => {
+          let cardBgClass = "from-gray-50 via-white to-gray-50/30 border-gray-200/60 hover:border-gray-300";
+          let iconBgClass = "bg-gray-100 text-gray-700";
+          
+          if (stat.color === "indigo") {
+            cardBgClass = "from-indigo-50/70 via-white to-indigo-50/20 border-indigo-100/50 hover:border-indigo-500/30 hover:shadow-indigo-100/20";
+            iconBgClass = "bg-indigo-100/70 text-indigo-700";
+          } else if (stat.color === "emerald") {
+            cardBgClass = "from-emerald-50/60 via-white to-emerald-50/20 border-emerald-100/60 hover:border-emerald-600/30 hover:shadow-emerald-100/20";
+            iconBgClass = "bg-emerald-100/70 text-emerald-700";
+          } else if (stat.color === "amber") {
+            cardBgClass = "from-amber-50/70 via-white to-amber-50/20 border-amber-100/60 hover:border-amber-500/30 hover:shadow-amber-100/20";
+            iconBgClass = "bg-amber-100/70 text-amber-700";
+          }
+
+          return (
+            <div
+              key={index}
+              className={cn(
+                "group bg-gradient-to-br p-6 rounded-[2rem] border shadow-sm hover:shadow-lg transition-all duration-300",
+                cardBgClass
+              )}
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <div
+                  className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-md shadow-gray-100/50",
+                    iconBgClass
+                  )}
+                >
+                  <stat.icon size={24} />
+                </div>
+                <div>
+                  <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">
+                    {stat.label}
+                  </p>
+                  <h3 className="text-2xl font-black text-gray-900">
+                    {stat.value}
+                  </h3>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8">
+        <div className="bg-gradient-to-br from-white to-gray-50/50 rounded-[2.5rem] border border-gray-200/70 shadow-sm p-8">
           <h4 className="text-xl font-bold text-gray-900 mb-6">
             Today's Attendance Summary
           </h4>
-          <div className="flex items-center justify-around h-48 border-2 border-dashed border-gray-100 rounded-3xl relative">
+          <div className="flex items-center justify-around h-48 border-2 border-dashed border-gray-100 rounded-3xl relative bg-white/40">
             <div className="text-center">
               <p className="text-4xl font-black text-emerald-600">
                 {attendance.present}
@@ -422,7 +473,7 @@ const TeacherDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-100 flex flex-col justify-center">
+        <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-100 flex flex-col justify-center animate-in fade-in duration-300">
           <h4 className="text-xl font-bold mb-4">Class Overview</h4>
           <p className="text-indigo-100 mb-6">
             You are currently handling students across multiple sessions. Ensure
@@ -430,10 +481,59 @@ const TeacherDashboard = () => {
           </p>
           <Button
             variant="ghost"
+            onClick={() => navigate("/teacher/timetable")}
             className="bg-white/10 text-white border-none hover:bg-white/20 rounded-2xl"
           >
             View My Schedule
           </Button>
+        </div>
+      </div>
+
+      {/* Assigned Classes Cards Section */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xl font-black text-gray-900 tracking-tight">
+            My Assigned Classes
+          </h4>
+          <span className="text-xs font-bold text-gray-400 bg-gray-50 px-3.5 py-1.5 rounded-full border border-gray-100/50">
+            {assignedClasses.length} Active Assignments
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {assignedClasses.map((cls) => (
+            <div
+              key={cls.id}
+              className="bg-gradient-to-br from-white via-indigo-50/5 to-indigo-50/15 p-6 rounded-[2.5rem] border border-gray-200/60 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 relative group flex flex-col justify-between min-h-[200px]"
+            >
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-750 bg-indigo-100/70 px-3 py-1 rounded-full">
+                  Academic Class
+                </span>
+                <h4 className="text-3xl font-black text-gray-900 tracking-tight mt-4 uppercase">
+                  Class {cls.name}
+                </h4>
+                <p className="text-gray-400 text-xs font-bold mt-2">
+                  Enrolled Students: <span className="text-gray-800 font-extrabold">{cls.studentCount}</span>
+                </p>
+              </div>
+
+              <div className="flex gap-2.5 mt-6 border-t border-gray-100 pt-4">
+                <Button
+                  onClick={() => navigate("/attendance", { state: { classId: cls.id } })}
+                  className="flex-1 rounded-xl py-2.5 text-[11px] font-black bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm active:scale-95 transition-all cursor-pointer"
+                >
+                  Mark Attendance
+                </Button>
+                <Button
+                  onClick={() => navigate("/teacher/timetable", { state: { classId: cls.id } })}
+                  className="flex-1 rounded-xl py-2.5 text-[11px] font-black bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-sm active:scale-95 transition-all cursor-pointer"
+                >
+                  View Schedule
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

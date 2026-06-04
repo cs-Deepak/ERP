@@ -64,7 +64,7 @@ const FeeReceiptPremium = ({ transaction, student, onDownload }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-[#F8FAFC] min-h-screen pb-10 flex flex-col font-sans">
+    <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-10 flex flex-col font-sans">
       {/* 1. Header Section */}
       <div className="bg-white px-6 py-6 border-b border-gray-100 flex flex-col items-center">
         <div className="flex items-center justify-center mb-2">
@@ -148,7 +148,7 @@ const FeeReceiptPremium = ({ transaction, student, onDownload }) => {
                   <span className="text-gray-500 font-medium">
                     {item.label}
                   </span>
-                  <span className="text-[#1E293B] font-bold">
+                  <span className="text-gray-900 font-bold">
                     {formatToINR(item.amount)}
                   </span>
                 </div>
@@ -157,7 +157,7 @@ const FeeReceiptPremium = ({ transaction, student, onDownload }) => {
           </div>
 
           {/* 5. Total Amount Highlight */}
-          <div className="bg-emerald-500 px-6 py-4 flex justify-between items-center text-white">
+          <div className="bg-emerald-600 px-6 py-4 flex justify-between items-center text-white">
             <span className="text-sm font-bold opacity-90">
               Total Amount Paid
             </span>
@@ -169,7 +169,7 @@ const FeeReceiptPremium = ({ transaction, student, onDownload }) => {
 
         {/* 6. Payment Status Badge */}
         <div className="flex justify-center pt-2">
-          <div className="bg-[#10B981] text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-lg shadow-emerald-100 animate-bounce-subtle">
+          <div className="bg-emerald-600 text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-lg shadow-emerald-100 animate-bounce-subtle">
             <CheckCircle2 size={18} />
             <span className="text-sm font-black uppercase tracking-widest">
               Paid
@@ -201,7 +201,7 @@ const DetailItem = ({ label, value, isFull }) => (
     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
       {label}
     </p>
-    <p className="text-sm font-black text-[#1E293B]">{value}</p>
+    <p className="text-sm font-black text-gray-900">{value}</p>
   </div>
 );
 
@@ -213,14 +213,14 @@ const IconDetail = ({ icon: Icon, label, value }) => (
       </div>
       <span className="text-sm text-gray-500 font-medium">{label}</span>
     </div>
-    <span className="text-sm font-bold text-[#1E293B]">{value}</span>
+    <span className="text-sm font-bold text-gray-900">{value}</span>
   </div>
 );
 
 const ActionButton = ({ label, icon: Icon, onClick }) => (
   <button
     onClick={onClick}
-    className="flex-1 bg-white border border-gray-100 rounded-2xl py-4 flex flex-col items-center gap-2 shadow-sm hover:shadow-md active:scale-95 transition-all text-[#1E293B]"
+    className="flex-1 bg-white border border-gray-100 rounded-2xl py-4 flex flex-col items-center gap-2 shadow-sm hover:shadow-md active:scale-95 transition-all text-gray-900"
   >
     <Icon size={20} className="text-indigo-600" />
     <span className="text-[10px] font-black uppercase tracking-widest">

@@ -8,6 +8,16 @@ import {
   AlertCircle,
   BookOpen,
   CreditCard,
+  Wallet,
+  TrendingUp,
+  Download,
+  ArrowUpRight,
+  History,
+  Printer,
+  ShieldCheck,
+  HelpCircle,
+  Layers,
+  Coins
 } from "lucide-react";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
@@ -30,9 +40,10 @@ const FeeCollection = () => {
   const [transactions, setTransactions] = useState([]);
   const [currentStep, setCurrentStep] = useState("selector"); // selector, active
   const [selectedMonth, setSelectedMonth] = useState("");
-  const [academicYear, setAcademicYear] = useState("2025-26");
+  const [academicYear, setAcademicYear] = useState("2026-2027");
   const [classSummary, setClassSummary] = useState(null);
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+  const [schoolStats, setSchoolStats] = useState(null);
 
   // Fetch classes on mount
   useEffect(() => {
@@ -47,6 +58,21 @@ const FeeCollection = () => {
       }
     };
     fetchClasses();
+  }, []);
+
+  // Fetch school stats on mount for general dashboard
+  useEffect(() => {
+    const fetchSchoolStats = async () => {
+      try {
+        const res = await api.get("/admin/stats");
+        if (res.data.success) {
+          setSchoolStats(res.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching school stats:", error);
+      }
+    };
+    fetchSchoolStats();
   }, []);
 
   // Fetch class summary when selectedClass changes
@@ -181,315 +207,396 @@ const FeeCollection = () => {
     }
   };
 
+  const getStudentInitials = (name) => {
+    if (!name) return "ST";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+  };
+
   return (
-    <div className="min-h-screen bg-[#F3F4F6] p-4 sm:p-8 animate-in fade-in duration-500">
-      <div className="max-w-[1600px] mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* 1. LEFT PANEL: Student Fee Lookup */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-100">
-                <h2 className="text-xl font-bold text-gray-800 tracking-tight">
-                  Student Fee Lookup
-                </h2>
+    <div className="max-w-[1600px] mx-auto space-y-8 p-1 sm:p-4 animate-in fade-in duration-500 pb-20">
+      
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-6">
+        <div>
+          <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest leading-none">
+            ERP Finance Hub
+          </span>
+          <h2 className="text-3xl font-black text-gray-900 tracking-tight mt-1">
+            Finances & Fee Center
+          </h2>
+          <p className="text-xs text-gray-400 font-bold mt-1.5 uppercase tracking-wide">
+            Track class-wise Expected vs Collected revenues and record fee collections.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="px-4 py-2 bg-indigo-50 border border-indigo-100/50 rounded-2xl text-[10px] font-black text-indigo-600 shadow-sm uppercase tracking-wider">
+            Academic Session: {academicYear}
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* 1. LEFT PANEL: Search and Class Selection Controls */}
+        <div className="lg:col-span-3 space-y-6">
+          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 space-y-6">
+            <div className="flex items-center gap-3 border-b border-gray-50 pb-4">
+              <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                <Search size={18} />
               </div>
-              <div className="p-6 space-y-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-700">
-                    Select Class
-                  </label>
-                  <select
-                    value={selectedClass}
-                    onChange={(e) => setSelectedClass(e.target.value)}
-                    className="w-full h-11 px-3 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
-                  >
-                    <option value="">Select Class</option>
-                    {classes.map((cls) => (
-                      <option key={cls._id} value={cls._id}>
-                        {cls.name} ({cls.section || "No Section"}) —{" "}
-                        {cls.students?.length || 0} Students
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <h4 className="text-sm font-black text-gray-800 uppercase tracking-tight">Lookup Controller</h4>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Select target academic segment</p>
+              </div>
+            </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-700">
-                    Search by Roll No / Student Name
-                  </label>
-                  <div className="relative">
-                    <Search
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                      size={16}
-                    />
-                    <input
-                      type="text"
-                      placeholder=""
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                      className="w-full h-11 pl-10 pr-4 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  onClick={handleSearch}
-                  loading={loading}
-                  disabled={!selectedClass || !searchQuery}
-                  className="w-full h-11 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 group"
+            {/* Select Class Dropdown */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Academic Class *</label>
+              <div className="relative">
+                <select
+                  value={selectedClass}
+                  onChange={(e) => setSelectedClass(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all appearance-none cursor-pointer outline-none"
                 >
-                  Search Student
-                  <ChevronRight
-                    size={18}
-                    className="group-hover:translate-x-1 transition-transform"
-                  />
-                </Button>
+                  <option value="">Select Class Group</option>
+                  {classes.map((cls) => (
+                    <option key={cls._id} value={cls._id}>
+                      {cls.name} ({cls.students?.length || 0} Students)
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 font-bold text-xs">
+                  ▼
+                </div>
               </div>
+            </div>
+
+            {/* Search query input */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Search Student *</label>
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Roll No or Student Name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                  className="w-full pl-11 pr-4 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:ring-4 focus:ring-indigo-100 focus:bg-white outline-none transition-all"
+                />
+              </div>
+              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight ml-1.5">Press Enter to search instantly</p>
+            </div>
+
+            {/* Action buttons */}
+            <div className="pt-2">
+              <Button
+                onClick={handleSearch}
+                loading={loading}
+                disabled={!selectedClass || !searchQuery}
+                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-indigo-100 active:scale-98 transition-transform"
+              >
+                <span>Process Billing</span>
+                <ChevronRight size={14} className="animate-pulse" />
+              </Button>
+              
+              {currentStep === "active" && (
+                <button
+                  onClick={() => {
+                    setStudent(null);
+                    setCurrentStep("selector");
+                    setSearchQuery("");
+                  }}
+                  className="w-full text-center text-[10px] font-black text-gray-400 hover:text-indigo-600 uppercase tracking-widest mt-4 transition-colors"
+                >
+                  Return to Dashboard
+                </button>
+              )}
             </div>
           </div>
 
-          {/* 2. CENTER PANEL: Illustration / Dynamic Content */}
-          <div className="lg:col-span-4">
-            {currentStep === "selector" ? (
-              !selectedClass ? (
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-12 h-full min-h-[500px] flex flex-col items-center justify-center text-center">
-                  <div className="w-48 h-48 bg-[#F8FAFC] rounded-full flex items-center justify-center mb-10 relative">
-                    <div className="absolute inset-0 flex items-center justify-center animate-pulse">
-                      <div className="w-40 h-40 bg-blue-50 rounded-full blur-2xl opacity-50"></div>
-                    </div>
-                    <div className="relative z-10 scale-150">
-                      <BookOpen
-                        size={64}
-                        className="text-blue-500"
-                        strokeWidth={1}
-                      />
+          {/* Quick Info Tip Card */}
+          <div className="bg-gray-900 rounded-[2rem] p-6 text-white relative overflow-hidden shadow-sm">
+            <div className="absolute right-0 top-0 w-32 h-32 bg-indigo-600/20 rounded-full blur-2xl"></div>
+            <div className="relative z-10 space-y-4">
+              <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-indigo-400">
+                <ShieldCheck size={16} />
+              </div>
+              <h5 className="text-xs font-black uppercase tracking-wider">Secured Finance Portal</h5>
+              <p className="text-[10px] text-gray-300 leading-relaxed">
+                All transactions are logged under the current administrator session. Fee receipt PDFs are generated dynamically and stored permanently.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. RIGHT/CENTER DYNAMIC REGION */}
+        <div className="lg:col-span-9">
+          
+          {/* STEP 1: CLASS SELECTION & OVERVIEW DASHBOARD */}
+          {currentStep === "selector" ? (
+            <div className="space-y-8">
+              
+              {/* If no Class is selected, display overall School statistics */}
+              {!selectedClass ? (
+                <div className="space-y-8">
+                  {/* Glassmorphic Greeting Header Banner */}
+                  <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8 sm:p-10 relative overflow-hidden">
+                    <div className="absolute right-10 top-0 w-64 h-64 bg-indigo-100/30 rounded-full blur-3xl"></div>
+                    <div className="relative z-10 max-w-xl space-y-4">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 border border-indigo-100/30 rounded-full text-[9px] font-black uppercase tracking-wider text-indigo-600">
+                        <Coins size={10} /> Billing & Ledgers
+                      </div>
+                      <h3 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight leading-tight">
+                        School financial status at a glance
+                      </h3>
+                      <p className="text-xs text-gray-400 font-semibold leading-relaxed">
+                        Select a class group from the controller on the left to review expectancies, collection ratios, and manage student fee schedules.
+                      </p>
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">
-                    Search a student to view fee details
-                  </h3>
-                  <p className="text-sm text-gray-500 font-medium italic">
-                    Enter Roll No or Name to fetch student information.
-                  </p>
+
+                  {/* School stats widgets */}
+                  {schoolStats ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                      <div className="bg-white rounded-[2rem] border border-gray-100 p-6 flex items-center gap-5 shadow-sm hover:translate-y-[-2px] transition-all">
+                        <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shadow-inner">
+                          <User size={20} />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Enrolled Students</p>
+                          <h4 className="text-xl font-black text-gray-900 mt-0.5">{schoolStats.totalStudents}</h4>
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-[2rem] border border-gray-100 p-6 flex items-center gap-5 shadow-sm hover:translate-y-[-2px] transition-all">
+                        <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shadow-inner">
+                          <Layers size={20} />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Active Classes</p>
+                          <h4 className="text-xl font-black text-gray-900 mt-0.5">{schoolStats.totalClasses}</h4>
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-[2rem] border border-gray-100 p-6 flex items-center gap-5 shadow-sm hover:translate-y-[-2px] transition-all">
+                        <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shadow-inner">
+                          <Wallet size={20} />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Overall Collected</p>
+                          <h4 className="text-xl font-black text-emerald-600 mt-0.5">{formatToINR(schoolStats.totalFeesCollected)}</h4>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-28 bg-white border border-gray-100 rounded-[2rem] flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                    </div>
+                  )}
                 </div>
               ) : isSummaryLoading ? (
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-12 h-full min-h-[500px] flex flex-col items-center justify-center text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                  <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">
-                    Loading Class Summary...
-                  </p>
+                <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-12 flex flex-col items-center justify-center text-center h-[400px]">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mb-4"></div>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Compiling Class Ledgers...</p>
                 </div>
               ) : classSummary ? (
-                <div className="space-y-6">
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="px-6 py-4 bg-[#F8FAFC] border-b border-gray-100 flex justify-between items-center">
-                      <h3 className="text-sm font-bold text-gray-700 tracking-tight uppercase">
-                        Class Overview: {classSummary.className}
-                      </h3>
-                      <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase">
-                        Academic Year {academicYear}
-                      </span>
+                <div className="space-y-8">
+                  
+                  {/* Expected vs Collected Analytics row */}
+                  <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8 sm:p-10">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-50 pb-6 mb-8">
+                      <div>
+                        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Selected Segment Overview</span>
+                        <h3 className="text-2xl font-black text-gray-900 tracking-tight mt-0.5">
+                          Class {classSummary.className} Status
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-xl text-[9px] font-black text-emerald-600 uppercase tracking-wider">
+                          Active Term
+                        </span>
+                      </div>
                     </div>
-                    <div className="p-8">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                            Total Students
-                          </p>
-                          <p className="text-2xl font-black text-gray-900">
-                            {classSummary.studentCount}
-                          </p>
-                        </div>
-                        <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                          <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">
-                            Expected Revenue
-                          </p>
-                          <p className="text-2xl font-black text-blue-900">
-                            {formatToINR(classSummary.totalExpected)}
-                          </p>
-                        </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+                      
+                      <div className="p-5 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Expected Students</p>
+                        <h4 className="text-2xl font-black text-gray-900 mt-1">{classSummary.studentCount}</h4>
                       </div>
 
-                      <div className="mt-6 space-y-4">
-                        <div className="relative h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-1000"
-                            style={{
-                              width: `${(classSummary.totalCollected / classSummary.totalExpected) * 100 || 0}%`,
-                            }}
-                          ></div>
-                        </div>
+                      <div className="p-5 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Expected Revenue</p>
+                        <h4 className="text-2xl font-black text-gray-800 mt-1">{formatToINR(classSummary.totalExpected)}</h4>
+                      </div>
 
-                        <div className="grid grid-cols-2 gap-8">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                Collected
-                              </p>
-                            </div>
-                            <p className="text-lg font-black text-emerald-600">
-                              {formatToINR(classSummary.totalCollected)}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <div className="flex items-center justify-end gap-2 mb-1">
-                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                Pending
-                              </p>
-                              <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                            </div>
-                            <p className="text-lg font-black text-amber-600">
-                              {formatToINR(classSummary.totalPending)}
-                            </p>
-                          </div>
-                        </div>
+                      <div className="p-5 bg-emerald-50/30 border border-emerald-100/50 rounded-2xl">
+                        <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Total Collected</p>
+                        <h4 className="text-2xl font-black text-emerald-600 mt-1">{formatToINR(classSummary.totalCollected)}</h4>
+                      </div>
+
+                      <div className="p-5 bg-amber-50/30 border border-amber-100/50 rounded-2xl">
+                        <p className="text-[9px] font-bold text-amber-600 uppercase tracking-widest">Outstanding Balances</p>
+                        <h4 className="text-2xl font-black text-amber-600 mt-1">{formatToINR(classSummary.totalPending)}</h4>
+                      </div>
+
+                    </div>
+
+                    {/* Progress representation */}
+                    <div className="mt-8 pt-6 border-t border-gray-50 space-y-3">
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-gray-400">
+                        <span>Collection progress ratio</span>
+                        <span className="text-indigo-600 font-extrabold text-xs">
+                          {((classSummary.totalCollected / classSummary.totalExpected) * 100 || 0).toFixed(1)}% Completed
+                        </span>
+                      </div>
+                      <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden p-0.5 border border-gray-100">
+                        <div
+                          className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-1000"
+                          style={{
+                            width: `${(classSummary.totalCollected / classSummary.totalExpected) * 100 || 0}%`,
+                          }}
+                        ></div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-blue-600 rounded-xl p-8 text-white shadow-lg shadow-blue-200 relative overflow-hidden group">
-                    <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
-                    <h4 className="text-lg font-bold mb-2 relative z-10">
-                      Quick Actions
-                    </h4>
-                    <p className="text-sm font-medium text-blue-100 mb-6 relative z-10 opacity-80">
-                      Search for a specific student to record their monthly fee
-                      and generate a digital receipt.
-                    </p>
-                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest relative z-10">
-                      <Search size={14} />
-                      Use the search bar on the left
+                  {/* Active Instruction Block */}
+                  <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-8">
+                    <div className="w-16 h-16 bg-indigo-50 rounded-3xl flex items-center justify-center text-indigo-600 shrink-0 shadow-inner">
+                      <BookOpen size={24} />
+                    </div>
+                    <div>
+                      <h4 className="text-md font-black text-gray-800 uppercase tracking-tight">Record Student Fee Ledger Entry</h4>
+                      <p className="text-xs text-gray-400 leading-relaxed font-semibold mt-1">
+                        Use the Lookup Controller sidebar to type the Roll Number or student name in class <strong>{classSummary.className}</strong>. Confirm the billing entry and print receipts.
+                      </p>
                     </div>
                   </div>
+
                 </div>
-              ) : null
-            ) : (
-              <div className="space-y-6">
-                {/* Student Details Card */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 bg-[#F8FAFC] border-b border-gray-100">
-                    <h3 className="text-sm font-bold text-gray-700 tracking-tight uppercase">
-                      Student Details
-                    </h3>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-5">
-                      <div className="w-20 h-20 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden border border-gray-200">
-                        {student.image ? (
-                          <img
-                            src={student.image}
-                            alt={student.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <User size={40} className="text-gray-400" />
-                        )}
+              ) : null}
+
+            </div>
+          ) : (
+            
+            /* STEP 2: ACTIVE STUDENT BILLING DETAILS PORTAL */
+            student && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* A. Student Profile & Summary (Left Column of Dynamic Area) */}
+                <div className="lg:col-span-5 space-y-6">
+                  
+                  {/* Mini Student Avatar Card */}
+                  <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 relative overflow-hidden">
+                    <div className="absolute right-0 top-0 w-24 h-24 bg-gray-50/80 rounded-bl-[2rem] flex items-center justify-center font-bold text-xs text-gray-400">
+                      R. #{student.roll}
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white text-lg font-black tracking-tight shadow-md shadow-indigo-100 shrink-0">
+                        {getStudentInitials(student.name)}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h2 className="text-xl font-bold text-gray-900">
-                            {student.name}
-                          </h2>
+                      <div className="space-y-1">
+                        <h4 className="text-md font-black text-gray-900 tracking-tight leading-tight">{student.name}</h4>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] font-black uppercase text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                            Class: {student.class}
+                          </span>
                           {student.dueFee <= 0 ? (
-                            <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold border border-emerald-100">
-                              Fees Cleared
+                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-black uppercase tracking-wider">
+                              No Due
                             </span>
                           ) : (
-                            <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-xs font-bold border border-amber-100">
-                              Pending Fees
+                            <span className="px-2 py-0.5 bg-amber-50 text-amber-600 rounded text-[9px] font-black uppercase tracking-wider">
+                              Due Outstanding
                             </span>
                           )}
                         </div>
-                        <p className="text-sm font-bold text-gray-500 mt-1">
-                          Roll No:{" "}
-                          <span className="text-gray-900">{student.roll}</span>
-                        </p>
-                        <p className="text-sm font-bold text-gray-500">
-                          Class:{" "}
-                          <span className="text-gray-900">{student.class}</span>
-                        </p>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Fee Summary Card */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 bg-[#F8FAFC] border-b border-gray-100">
-                    <h3 className="text-sm font-bold text-gray-700 tracking-tight uppercase">
-                      Fee Summary
-                    </h3>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <div className="space-y-3">
-                      {[
-                        {
-                          label: "Monthly Fee",
-                          value:
-                            student.ledger?.monthlyBreakdown?.[0]?.amount || 0,
-                        },
-                        { label: "Transport Fee", value: 0 },
-                        { label: "Other charges", value: 0 },
-                      ].map((fee, idx) => (
-                        <div
-                          key={idx}
-                          className="flex justify-between items-center text-sm"
-                        >
-                          <span className="text-gray-500 font-medium flex items-center gap-2">
-                            <span className="w-1 h-1 bg-gray-400 rounded-full"></span>{" "}
-                            {fee.label}
-                          </span>
-                          <span className="text-gray-900 font-bold">
-                            ₹ {fee.value.toLocaleString()}
-                          </span>
-                        </div>
-                      ))}
+                  {/* Student Ledger Financials Summary */}
+                  <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 space-y-4">
+                    <h5 className="text-xs font-black text-gray-800 uppercase tracking-wider border-b border-gray-50 pb-3">Student Billing Summary</h5>
+                    
+                    <div className="space-y-3.5">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-400 font-bold uppercase tracking-tight">Academic Tuition Base</span>
+                        <span className="text-gray-900 font-black">
+                          {formatToINR(student.ledger?.monthlyBreakdown?.[0]?.amount || 0)} <span className="text-[10px] text-gray-400 font-bold">/ Mo</span>
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-400 font-bold uppercase tracking-tight">Settled Months</span>
+                        <span className="text-emerald-600 font-black">
+                          {student.ledger?.monthlyBreakdown?.filter((m) => m.status === "PAID").length || 0}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-400 font-bold uppercase tracking-tight">Outstanding Months</span>
+                        <span className="text-amber-500 font-black">
+                          {student.ledger?.monthlyBreakdown?.filter((m) => m.status !== "PAID").length || 0}
+                        </span>
+                      </div>
                     </div>
-                    <div className="border-t border-gray-100 pt-4 flex justify-between items-center">
-                      <span className="text-sm text-gray-500 font-medium flex items-center gap-2">
-                        <span className="w-1 h-1 bg-gray-400 rounded-full"></span>{" "}
-                        Months Due:
-                      </span>
-                      <span className="text-sm font-bold text-gray-900">
-                        {(student.ledger?.monthlyBreakdown || [])
-                          .filter((m) => m.status !== "PAID")
-                          .map((m) => m.month.substring(0, 3))
-                          .join(", ") || "None"}
-                      </span>
-                    </div>
-                    <div className="border-t border-gray-100 pt-4 flex justify-between items-center">
-                      <span className="text-sm text-gray-500 font-medium flex items-center gap-2">
-                        <span className="w-1 h-1 bg-gray-400 rounded-full"></span>{" "}
-                        Total Due:
-                      </span>
-                      <span className="text-xl font-bold text-gray-900">
+
+                    <div className="border-t border-gray-50 pt-4 flex justify-between items-center">
+                      <span className="text-xs text-gray-400 font-black uppercase tracking-wider">Net Outstanding</span>
+                      <span className="text-xl font-black text-gray-900">
                         {formatToINR(Math.max(0, student.dueFee))}
                       </span>
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
-          </div>
 
-          {/* 3. RIGHT PANEL: Payment Section (Active Only) */}
-          <div className="lg:col-span-5">
-            {currentStep !== "selector" && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-full">
-                  <div className="px-6 py-4 bg-[#F8FAFC] border-b border-gray-100">
-                    <h3 className="text-sm font-bold text-gray-700 tracking-tight uppercase">
-                      Collect Payment
-                    </h3>
+                  {/* Monthly Ledger Details Checklist */}
+                  <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 space-y-4">
+                    <h5 className="text-xs font-black text-gray-800 uppercase tracking-wider border-b border-gray-50 pb-3">Statement Breakdown</h5>
+                    
+                    <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                      {(student.ledger?.monthlyBreakdown || []).map((monthInfo) => (
+                        <div key={monthInfo.month} className="flex items-center justify-between text-xs py-1 border-b border-gray-50/50">
+                          <span className="font-bold text-gray-600 uppercase tracking-wider">{monthInfo.month}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-gray-400">{formatToINR(monthInfo.amount)}</span>
+                            {monthInfo.status === "PAID" ? (
+                              <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-black uppercase">Paid</span>
+                            ) : monthInfo.status === "PARTIAL" ? (
+                              <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-black uppercase">Partial</span>
+                            ) : (
+                              <span className="px-2 py-0.5 bg-red-50/70 text-red-500 rounded text-[9px] font-black uppercase">Pending</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="p-8 space-y-8">
-                    <div className="space-y-3">
-                      <label className="text-sm text-gray-700 font-bold">
-                        Select Payment Month
-                      </label>
-                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+
+                </div>
+
+                {/* B. Collect Payment Form (Right Column of Dynamic Area) */}
+                <div className="lg:col-span-7 space-y-6">
+                  
+                  {/* Settlement Collection Panel */}
+                  <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8 space-y-8">
+                    <div className="border-b border-gray-50 pb-4">
+                      <h4 className="text-md font-black text-gray-800 uppercase tracking-tight">Record Fee Settlement</h4>
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-tight">Submit incoming payments and generate vouchers</p>
+                    </div>
+
+                    {/* Month Picker Selection Grid */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Payment Target Month *</label>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
                         {(student.ledger?.monthlyBreakdown || []).map((m) => (
                           <button
                             key={m.month}
@@ -500,151 +607,159 @@ const FeeCollection = () => {
                             }}
                             disabled={m.status === "PAID"}
                             className={cn(
-                              "relative py-2 px-1 rounded-lg text-[10px] font-bold uppercase transition-all border",
+                              "relative py-3.5 px-2 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all border text-center flex items-center justify-center cursor-pointer",
                               selectedMonth === m.month
-                                ? "bg-blue-600 border-blue-600 text-white shadow-md z-10"
+                                ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100 scale-95"
                                 : m.status === "PAID"
-                                  ? "bg-green-50 border-green-100 text-green-500 cursor-not-allowed opacity-60"
-                                  : "bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:bg-blue-50",
+                                  ? "bg-emerald-50/50 border-emerald-100/50 text-emerald-600/70 cursor-not-allowed opacity-60"
+                                  : "bg-gray-50/50 border-gray-100 text-gray-500 hover:border-indigo-300 hover:bg-indigo-50/30",
                             )}
                           >
-                            {m.month.substring(0, 3)}
+                            <span>{m.month.substring(0, 3)}</span>
                             {m.status === "PAID" && (
-                              <div className="absolute -top-1 -right-1 bg-green-500 text-white w-3 h-3 rounded-full flex items-center justify-center border border-white">
-                                <CheckCircle size={8} />
-                              </div>
+                              <span className="absolute -top-1 -right-1 bg-emerald-600 text-white w-4 h-4 rounded-full flex items-center justify-center border border-white">
+                                ✓
+                              </span>
                             )}
                           </button>
                         ))}
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4 h-14 px-4 border border-gray-300 rounded-lg">
-                      <label className="text-sm text-gray-600 font-medium">
-                        Amount to Collect
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold text-gray-900">
-                          ₹
-                        </span>
-                        <input
-                          type="number"
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
-                          className="w-24 text-xl font-bold text-gray-900 focus:outline-none"
-                        />
+                    {/* Amount & Mode Selector Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      
+                      {/* Amount Entry Input */}
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Collection Value *</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-gray-400 text-xs">₹</span>
+                          <input
+                            type="number"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            className="w-full pl-8 pr-4 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 focus:ring-4 focus:ring-indigo-100 focus:bg-white outline-none"
+                            placeholder="0.00"
+                          />
+                        </div>
                       </div>
+
+                      {/* Payment Mode Selector Dropdown */}
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Payment Method *</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {["CASH", "CARD", "ONLINE"].map((mode) => (
+                            <button
+                              key={mode}
+                              type="button"
+                              onClick={() => setPaymentMode(mode)}
+                              className={cn(
+                                "py-3.5 rounded-2xl border text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer text-center",
+                                paymentMode === mode
+                                  ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100"
+                                  : "bg-gray-50/50 border-gray-100 text-gray-500 hover:border-gray-200"
+                              )}
+                            >
+                              {mode}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                     </div>
 
-                    <div className="space-y-3">
-                      <label className="text-sm text-gray-700 font-bold">
-                        Payment Mode
-                      </label>
-                      <div className="grid grid-cols-3 gap-3">
-                        {[
-                          {
-                            id: "CASH",
-                            label: "Cash",
-                            icon: <CreditCard size={18} />,
-                          },
-                          {
-                            id: "CARD",
-                            label: "Card",
-                            icon: <CreditCard size={18} />,
-                          },
-                          { id: "ONLINE", label: "Online", icon: null },
-                        ].map((mode) => (
-                          <button
-                            key={mode.id}
-                            onClick={() => setPaymentMode(mode.id)}
-                            className={cn(
-                              "h-12 border rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all",
-                              paymentMode === mode.id
-                                ? "bg-[#2563EB] border-[#2563EB] text-white"
-                                : "bg-white border-gray-300 text-gray-700 hover:border-gray-400",
-                            )}
-                          >
-                            {mode.icon} {mode.label}
-                          </button>
-                        ))}
-                      </div>
+                    {/* Big Action Submit Button */}
+                    <div className="pt-4">
+                      <Button
+                        onClick={() => handlePayment()}
+                        loading={loading}
+                        disabled={!amount || amount <= 0 || !selectedMonth}
+                        className="w-full py-4.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-indigo-100 active:scale-98 transition-transform"
+                      >
+                        Confirm payment entry & Print receipt
+                      </Button>
                     </div>
 
-                    <Button
-                      onClick={() => handlePayment()}
-                      loading={loading}
-                      className="w-full h-14 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-lg text-lg font-bold flex items-center justify-center gap-2 group shadow-lg shadow-blue-500/10"
-                    >
-                      Confirm & Generate Receipt
-                      <ChevronRight
-                        size={22}
-                        className="group-hover:translate-x-1 transition-transform"
-                      />
-                    </Button>
                   </div>
-                </div>
 
-                {/* Mobile Transactions Table (shown below collection) */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 overflow-hidden">
-                  <h3 className="text-sm font-bold text-gray-700 uppercase tracking-tight mb-4">
-                    Recent Settlements
-                  </h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="text-xs font-bold text-gray-400 border-b border-gray-50">
-                          <th className="py-3">Receipt</th>
-                          <th className="py-3">Month</th>
-                          <th className="py-3">Amount</th>
-                          <th className="py-3 text-right">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50">
-                        {transactions.slice(0, 5).map((tx) => (
-                          <tr
-                            key={tx._id}
-                            className="text-xs font-medium text-gray-600"
-                          >
-                            <td className="py-3 text-blue-600 font-bold">
-                              {tx.receiptNumber ||
-                                tx._id.toString().slice(-6).toUpperCase()}
-                            </td>
-                            <td className="py-3">{tx.month}</td>
-                            <td className="py-3 font-bold text-gray-900">
-                              {formatToINR(tx.amount)}
-                            </td>
-                            <td className="py-3 text-right">
-                              {new Date(tx.createdAt).toLocaleDateString()}
-                            </td>
+                  {/* Recent Settlement History */}
+                  <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-gray-50 pb-3">
+                      <h5 className="text-xs font-black text-gray-800 uppercase tracking-wider">Settlement Records</h5>
+                      <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Showing last 5 entries</span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="text-[10px] font-black text-gray-400 border-b border-gray-50 uppercase tracking-wider">
+                            <th className="py-3">Receipt</th>
+                            <th className="py-3">Month</th>
+                            <th className="py-3">Amount</th>
+                            <th className="py-3">Date</th>
+                            <th className="py-3 text-right">Receipt File</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50/50">
+                          {transactions.length === 0 ? (
+                            <tr>
+                              <td colSpan="5" className="py-6 text-center text-xs font-bold text-gray-400 uppercase tracking-wide">
+                                No recent receipts found for this student.
+                              </td>
+                            </tr>
+                          ) : (
+                            transactions.slice(0, 5).map((tx) => (
+                              <tr key={tx._id} className="text-xs font-bold text-gray-600">
+                                <td className="py-3 text-indigo-600 uppercase tracking-tight">
+                                  {tx.receiptNumber || tx._id.toString().slice(-6).toUpperCase()}
+                                </td>
+                                <td className="py-3 uppercase">{tx.month}</td>
+                                <td className="py-3 text-gray-900 font-extrabold">{formatToINR(tx.amount)}</td>
+                                <td className="py-3 text-gray-400 font-semibold">{new Date(tx.createdAt).toLocaleDateString()}</td>
+                                <td className="py-3 text-right">
+                                  <button
+                                    onClick={() => handleDownloadReceipt(tx._id)}
+                                    className="p-2 text-indigo-600 hover:text-indigo-700 bg-indigo-50/50 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 rounded-xl transition-all inline-flex items-center justify-center"
+                                    title="Download Receipt PDF"
+                                  >
+                                    <Download size={14} />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
+
                 </div>
+
               </div>
-            )}
-          </div>
+            )
+          )}
+
         </div>
+
       </div>
 
-      {/* Success Modal remains similar but cleaner */}
+      {/* Success Modal */}
       <Modal
         isOpen={isSuccessModalOpen}
         onClose={() => setIsSuccessModalOpen(false)}
         maxWidth="md"
-        className="rounded-xl"
+        className="rounded-[2.5rem] border border-gray-100 shadow-xl"
         footer={
-          <div className="flex gap-3 w-full">
+          <div className="flex gap-4 w-full p-2">
             <Button
               variant="secondary"
-              className="flex-1"
+              className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-gray-600 border border-gray-100 hover:bg-gray-50 uppercase tracking-wider"
               onClick={() => setIsSuccessModalOpen(false)}
             >
               Close
             </Button>
             <Button
-              className="flex-1 bg-[#2563EB]"
+              className="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-md shadow-indigo-100"
               onClick={() => handleDownloadReceipt(transaction?._id)}
             >
               Print Receipt
@@ -653,39 +768,47 @@ const FeeCollection = () => {
         }
       >
         <div className="text-center py-6">
-          <div className="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={40} />
+          <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <CheckCircle size={28} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Payment Successful
+          <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-2">
+            Receipt Settled
           </h2>
-          <p className="text-sm text-gray-500 mb-8">
-            Receipt has been generated for {student?.name}
+          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-8">
+            Transaction voucher created for {student?.name}
           </p>
 
-          <div className="bg-gray-50 rounded-xl p-6 text-left space-y-4">
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-400 font-bold uppercase">
+          <div className="bg-gray-50/50 border border-gray-100 rounded-2xl p-6 text-left space-y-4 text-xs font-bold">
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-gray-400 font-black uppercase tracking-wider">
                 Transaction ID
               </span>
-              <span className="text-sm font-bold text-gray-900">
+              <span className="font-extrabold text-gray-800 uppercase tracking-tight">
                 {transaction?._id?.toString().toUpperCase()}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-400 font-bold uppercase">
-                Amount Paid
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-gray-400 font-black uppercase tracking-wider">
+                Amount Settled
               </span>
-              <span className="text-sm font-bold text-gray-900">
+              <span className="font-black text-emerald-600 text-sm">
                 {formatToINR(transaction?.amount || 0)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-400 font-bold uppercase">
-                Period
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-gray-400 font-black uppercase tracking-wider">
+                Payment Period
               </span>
-              <span className="text-sm font-bold text-gray-900">
+              <span className="text-gray-800 font-extrabold uppercase">
                 {transaction?.month} {transaction?.academicYear}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-gray-400 font-black uppercase tracking-wider">
+                Payment Method
+              </span>
+              <span className="text-gray-800 font-extrabold uppercase">
+                {transaction?.paymentMode}
               </span>
             </div>
           </div>
