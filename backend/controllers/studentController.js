@@ -7,8 +7,50 @@
 
 const Student = require('../models/Student');
 const Class = require('../models/Class');
+const Teacher = require('../models/Teacher');
 const FeeLedger = require('../models/FeeLedger');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
+
+// Helper function to resolve or create a Class automatically
+const getOrCreateClass = async (className, section) => {
+  if (!className) return null;
+  const classFullName = section ? `${className}-${section}` : className;
+  
+  let targetClass = await Class.findOne({ name: classFullName });
+  if (!targetClass) {
+    targetClass = await Class.findOne({ name: className });
+  }
+  
+  if (!targetClass) {
+    console.log(`Class "${className}" not found in DB. Automatically creating it...`);
+    
+    // Find a teacher to assign
+    let teacher = await Teacher.findOne({});
+    if (!teacher) {
+      console.log("No teacher found in database. Creating a default teacher first...");
+      teacher = await Teacher.create({
+        fullName: "Primary Class Teacher",
+        email: `teacher-${className.replace(/\s+/g, '-').toLowerCase()}@lfes.com`,
+        phone: "9876543210",
+        gender: "Other",
+        qualification: "B.Ed",
+        joiningDate: new Date(),
+        salary: 25000,
+        status: "Active"
+      });
+    }
+    
+    targetClass = await Class.create({
+      name: className,
+      teacher: teacher._id,
+      tuitionFee: 1500, // Default tuition fee
+      isActive: true
+    });
+    console.log(`✅ Created Class: "${className}" with ID: ${targetClass._id}`);
+  }
+  
+  return targetClass;
+};
 
 /**
  * @desc    Get all students (with optional filters)
@@ -88,30 +130,48 @@ const getStudentById = async (req, res, next) => {
  */
 const createStudent = async (req, res, next) => {
   try {
-    // Find matching class and link it
-    if (req.body.className) {
-      const classFullName = req.body.section 
-        ? `${req.body.className}-${req.body.section}` 
-        : req.body.className;
-      let targetClass = await Class.findOne({ name: classFullName });
-      if (!targetClass) {
-        targetClass = await Class.findOne({ name: req.body.className });
-      }
-      if (targetClass) {
-        req.body.class = targetClass._id;
+    const isArray = Array.isArray(req.body);
+    const studentsData = isArray ? req.body : [req.body];
+
+    // Cache classes to avoid querying too many times
+    const classCache = {};
+
+    for (const data of studentsData) {
+      if (data.className) {
+        const cacheKey = data.section ? `${data.className}-${data.section}` : data.className;
+        let targetClass = classCache[cacheKey];
+        
+        if (!targetClass) {
+          targetClass = await getOrCreateClass(data.className, data.section);
+          if (targetClass) {
+            classCache[cacheKey] = targetClass;
+          }
+        }
+        
+        if (targetClass) {
+          data.class = targetClass._id;
+        }
       }
     }
 
-    const student = await Student.create(req.body);
+    const createdStudents = await Student.create(studentsData);
 
-    // If class reference is found, push student to class.students array
-    if (student.class) {
-      await Class.findByIdAndUpdate(student.class, {
-        $addToSet: { students: student._id }
-      });
+    // Update class references
+    const createdArray = Array.isArray(createdStudents) ? createdStudents : [createdStudents];
+    for (const student of createdArray) {
+      if (student.class) {
+        await Class.findByIdAndUpdate(student.class, {
+          $addToSet: { students: student._id }
+        });
+      }
     }
 
-    return successResponse(res, student, 'Student created successfully', 201);
+    return successResponse(
+      res, 
+      isArray ? createdStudents : createdStudents[0], 
+      `${isArray ? 'Students' : 'Student'} created successfully`, 
+      201
+    );
   } catch (error) {
     next(error);
   }
@@ -134,12 +194,7 @@ const updateStudent = async (req, res, next) => {
       const className = req.body.className !== undefined ? req.body.className : oldStudent.className;
       const section = req.body.section !== undefined ? req.body.section : oldStudent.section;
       
-      const classFullName = section ? `${className}-${section}` : className;
-      let targetClass = await Class.findOne({ name: classFullName });
-      if (!targetClass) {
-        targetClass = await Class.findOne({ name: className });
-      }
-
+      const targetClass = await getOrCreateClass(className, section);
       if (targetClass) {
         req.body.class = targetClass._id;
       }
