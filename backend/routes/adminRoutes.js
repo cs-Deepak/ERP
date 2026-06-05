@@ -18,7 +18,9 @@ const {
   getClassAttendanceReport,
   getStudentAttendanceReport,
   getStudentAttendanceAnalysis,
-  getDashboardStats
+  getDashboardStats,
+  getStaffCredentials,
+  resetStaffPassword
 } = require('../controllers/adminController');
 const { protect, authorize, isAdmin } = require('../middleware/auth');
 
@@ -44,6 +46,10 @@ router.get('/classes/:id/summary', adminOnly, getClassSummary);
 // Resource creation routes
 router.post('/teachers', adminOnly, createTeacher);
 router.post('/students', sharedAccess, createStudent); // Allow teachers to enroll students
+
+// Staff credentials management (Admin only)
+router.get('/staff-credentials', adminOnly, getStaffCredentials);
+router.post('/staff-credentials/reset-password', adminOnly, resetStaffPassword);
 
 // Analytics routes
 router.get('/attendance/class/:classId', getClassAttendanceReport);

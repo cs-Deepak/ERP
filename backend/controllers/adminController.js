@@ -171,6 +171,68 @@ const getClassSummary = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get all staff (teachers) populated with their User credentials
+ * @route   GET /api/admin/staff-credentials
+ */
+const getStaffCredentials = async (req, res, next) => {
+  try {
+    const Teacher = require('../models/Teacher');
+    const teachers = await Teacher.find()
+      .populate('user', 'name email role isActive')
+      .sort({ firstName: 1 });
+    
+    return successResponse(res, teachers, 'Staff credentials fetched successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Reset password or recreate User credentials for a staff member
+ * @route   POST /api/admin/staff-credentials/reset-password
+ */
+const resetStaffPassword = async (req, res, next) => {
+  try {
+    const { teacherId, newPassword } = req.body;
+    if (!teacherId || !newPassword) {
+      return res.status(400).json({ success: false, message: 'teacherId and newPassword are required' });
+    }
+
+    const Teacher = require('../models/Teacher');
+    const User = require('../models/User');
+
+    const teacher = await Teacher.findById(teacherId);
+    if (!teacher) {
+      return res.status(404).json({ success: false, message: 'Teacher profile not found' });
+    }
+
+    let user;
+    if (teacher.user) {
+      user = await User.findById(teacher.user);
+    }
+
+    if (!user) {
+      // Re-create user account if it doesn't exist or is desynced
+      user = await User.create({
+        name: `${teacher.firstName} ${teacher.lastName}`,
+        email: teacher.email,
+        password: newPassword,
+        role: 'teacher'
+      });
+      teacher.user = user._id;
+      await teacher.save();
+    } else {
+      user.password = newPassword;
+      await user.save();
+    }
+
+    return successResponse(res, null, `Password reset successfully for ${teacher.firstName} ${teacher.lastName}`);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createClass,
   updateClass,
@@ -184,4 +246,6 @@ module.exports = {
   getStudentAttendanceReport,
   getStudentAttendanceAnalysis,
   getDashboardStats,
+  getStaffCredentials,
+  resetStaffPassword,
 };

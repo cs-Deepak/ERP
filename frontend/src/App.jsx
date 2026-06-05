@@ -27,6 +27,7 @@ import SubjectMaster from "./pages/SubjectMaster";
 import ClassSubjectMapping from "./pages/ClassSubjectMapping";
 import TimetableManagement from "./pages/TimetableManagement";
 import TeacherTimetableView from "./pages/TeacherTimetableView";
+import StaffCredentials from "./pages/StaffCredentials";
 
 // Protected Route Wrapper
 
@@ -153,6 +154,17 @@ function App() {
                 <ProtectedRoute>
                   <Layout>
                     <TeacherManagement />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin/credentials"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Layout>
+                    <StaffCredentials />
                   </Layout>
                 </ProtectedRoute>
               }

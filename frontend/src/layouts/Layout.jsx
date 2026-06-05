@@ -16,6 +16,7 @@ import {
   BookOpen,
   Network,
   Calendar,
+  KeyRound,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -107,6 +108,13 @@ const Layout = ({ children }) => {
       path: "/reports/attendance",
       label: "Attendance Analytics",
       icon: BarChart3,
+      roles: ["admin"],
+    },
+    {
+      id: "credentials",
+      path: "/admin/credentials",
+      label: "Credentials Manager",
+      icon: KeyRound,
       roles: ["admin"],
     },
   ];
