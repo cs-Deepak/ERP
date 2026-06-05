@@ -85,11 +85,15 @@ const studentSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
-    section: {
+    aadhar: {
       type: String,
-      required: [true, 'Section is required (e.g. A)'],
       trim: true,
-      index: true,
+      default: '',
+    },
+    cast: {
+      type: String,
+      trim: true,
+      default: '',
     },
     class: {
       type: mongoose.Schema.Types.ObjectId,
@@ -231,7 +235,7 @@ studentSchema.pre('save', async function () {
   }
 });
 
-// Performance optimization: Compound index for unique roll number within a class & section in the active session
-studentSchema.index({ className: 1, section: 1, session: 1, rollNumber: 1 }, { unique: true });
+// Performance optimization: Compound index for unique roll number within a class in the active session
+studentSchema.index({ className: 1, session: 1, rollNumber: 1 }, { unique: true });
 
 module.exports = mongoose.model('Student', studentSchema);

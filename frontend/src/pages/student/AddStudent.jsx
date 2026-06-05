@@ -66,6 +66,8 @@ const AddStudent = () => {
       bloodGroup: "Unknown",
       email: "",
       phone: "",
+      cast: "",
+      aadhar: "",
       admissionNumber: "",
       rollNumber: "",
       className: "",
@@ -135,6 +137,8 @@ const AddStudent = () => {
             bloodGroup: student.bloodGroup || "Unknown",
             email: student.email || "",
             phone: student.phone || "",
+            cast: student.cast || "",
+            aadhar: student.aadhar || "",
             admissionNumber: student.admissionNumber || "",
             rollNumber: student.rollNumber || "",
             className: student.className || "",
@@ -172,7 +176,7 @@ const AddStudent = () => {
 
   // Step fields for trigger validation
   const STEP_FIELDS = [
-    ["fullName", "gender", "dob", "bloodGroup", "email", "phone"],
+    ["fullName", "gender", "dob", "bloodGroup", "email", "phone", "cast", "aadhar"],
     ["admissionNumber", "rollNumber", "className", "section", "session", "status", "transportMode", "admissionDate", "discountPercentage"],
     ["fatherName", "motherName", "emergencyContact"],
     ["address"],
@@ -477,6 +481,28 @@ const AddStudent = () => {
                       placeholder="Phone number"
                       className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-semibold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all"
                       {...register("phone")}
+                    />
+                  </div>
+
+                  {/* Cast */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Cast</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. General, OBC, SC/ST"
+                      className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-semibold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all"
+                      {...register("cast")}
+                    />
+                  </div>
+
+                  {/* Aadhar Number */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Aadhar Number</label>
+                    <input
+                      type="text"
+                      placeholder="12-digit Aadhar No"
+                      className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-semibold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all"
+                      {...register("aadhar")}
                     />
                   </div>
                 </div>

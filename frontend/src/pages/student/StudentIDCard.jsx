@@ -12,7 +12,7 @@ import {
   Layers,
   FileText,
 } from "lucide-react";
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas-pro";
 import { jsPDF } from "jspdf";
 import api from "../../services/api";
 import { useToast } from "../../context/ToastContext";
@@ -135,7 +135,7 @@ const StudentIDCard = () => {
 
         // Add visual cut outlines
         pdf.setDrawColor(203, 213, 225); // Slate 300
-        pdf.setLineDashMode([1.5, 1.5], 0);
+        pdf.setLineDash([1.5, 1.5], 0);
         pdf.rect(30, yCoord, cardW, cardH, "D");
         pdf.rect(120, yCoord, cardW, cardH, "D");
       } else {
@@ -149,14 +149,14 @@ const StudentIDCard = () => {
 
         // Add visual cut outlines
         pdf.setDrawColor(203, 213, 225); // Slate 300
-        pdf.setLineDashMode([1.5, 1.5], 0);
+        pdf.setLineDash([1.5, 1.5], 0);
         pdf.rect(60, yCoord1, cardW, cardH, "D");
         pdf.rect(60, yCoord2, cardW, cardH, "D");
       }
 
       // Add print instructions footer
       pdf.setDrawColor(0);
-      pdf.setLineDashMode([], 0); // Reset dash style
+      pdf.setLineDash([], 0); // Reset dash style
       pdf.setFont("Helvetica", "bold");
       pdf.setFontSize(8.5);
       pdf.setTextColor(71, 85, 105); // Slate 600
@@ -403,7 +403,11 @@ const StudentIDCard = () => {
             </div>
 
             {/* Elegant Header Wave */}
-            <div className={cn("bg-gradient-to-r p-5 shrink-0 flex items-center gap-3 justify-between relative shadow-sm", theme.gradient)}>
+            <div className={cn(
+              "bg-gradient-to-r shrink-0 flex items-center gap-3 justify-between relative shadow-sm",
+              orientation === "portrait" ? "p-5" : "py-2.5 px-4",
+              theme.gradient
+            )}>
               <div className="flex items-center gap-2">
                 <SchoolLogo className="w-8 h-8 flex-shrink-0 bg-white/10 p-0.5 rounded-lg border border-white/20 text-white" showText={false} />
                 <div className="text-left leading-tight">
@@ -423,18 +427,26 @@ const StudentIDCard = () => {
             </div>
 
             {/* Content area */}
-            <div className={cn("flex-1 p-5 flex relative z-10", orientation === "portrait" ? "flex-col items-center justify-between text-center" : "flex-row items-center justify-between text-left gap-4")}>
+            <div className={cn(
+              "flex-1 flex relative z-10",
+              orientation === "portrait" ? "p-5 flex-col items-center justify-between text-center" : "py-3 px-4 flex-row items-center justify-between text-left gap-4"
+            )}>
               
               {/* Photo Area */}
-              <div className={cn("shrink-0 relative flex items-center justify-center", orientation === "portrait" ? "mt-2" : "ml-2")}>
-                <div className={cn("w-24 h-24 rounded-[1.75rem] bg-white flex items-center justify-center p-1 shadow-md ring-4 overflow-hidden transition-all duration-300", 
+              <div className={cn("shrink-0 relative flex items-center justify-center", orientation === "portrait" ? "mt-2" : "ml-0")}>
+                <div className={cn(
+                  "bg-white flex items-center justify-center p-1 shadow-md ring-4 overflow-hidden transition-all duration-300", 
+                  orientation === "portrait" ? "w-24 h-24 rounded-[1.75rem]" : "w-20 h-20 rounded-2xl",
                   theme.id === "sapphire" ? "ring-indigo-100 border-indigo-200" :
                   theme.id === "crimson" ? "ring-rose-100 border-rose-200" :
                   theme.id === "emerald" ? "ring-emerald-100 border-emerald-200" :
                   theme.id === "golden" ? "ring-amber-100 border-amber-200" :
                   "ring-slate-100 border-slate-200"
                 )}>
-                  <div className="w-full h-full rounded-[1.25rem] overflow-hidden bg-gray-50 flex items-center justify-center border border-gray-100">
+                  <div className={cn(
+                    "w-full h-full overflow-hidden bg-gray-50 flex items-center justify-center border border-gray-100",
+                    orientation === "portrait" ? "rounded-[1.25rem]" : "rounded-xl"
+                  )}>
                     {photoUrl ? (
                       <img
                         src={photoUrl}
@@ -459,26 +471,55 @@ const StudentIDCard = () => {
               </div>
 
               {/* Text Fields */}
-              <div className={cn("flex-1 space-y-3.5", orientation === "portrait" ? "w-full mt-4" : "space-y-2.5")}>
+              <div className={cn(
+                "flex-1", 
+                orientation === "portrait" ? "w-full mt-4 space-y-3.5" : "space-y-1.5"
+              )}>
                 <div>
-                  <h3 className={cn("text-xl font-black uppercase tracking-tight leading-tight", theme.text)}>
+                  <h3 className={cn(
+                    "font-black uppercase tracking-tight leading-tight", 
+                    orientation === "portrait" ? "text-xl" : "text-lg",
+                    theme.text
+                  )}>
                     {personalDetails?.name}
                   </h3>
-                  <div className="inline-block px-3 py-1 bg-gray-100/70 border border-gray-200/50 rounded-full mt-1.5 shadow-sm">
+                  <div className={cn(
+                    "inline-block bg-gray-100/70 border border-gray-200/50 rounded-full shadow-sm",
+                    orientation === "portrait" ? "px-3 py-1 mt-1.5" : "px-2.5 py-0.5 mt-1"
+                  )}>
                     <p className="text-[9px] font-black text-gray-500 uppercase tracking-wider leading-none">
                       Class: {academicDetails?.className} - {academicDetails?.section}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-left bg-gray-50/60 p-3 rounded-2xl border border-gray-100/70">
+                <div className={cn(
+                  "grid grid-cols-2 text-left bg-gray-50/60 border border-gray-100/70",
+                  orientation === "portrait" ? "gap-x-3 gap-y-2 p-2.5 rounded-2xl" : "gap-x-3 gap-y-1 p-2 rounded-xl"
+                )}>
                   <div className="border-r border-gray-200/60 pr-1">
-                    <span className="text-[7.5px] font-bold text-gray-400 uppercase tracking-wider block">Student ID</span>
-                    <span className="text-[11px] font-black font-mono text-gray-750 mt-0.5 block tracking-wide">{personalDetails?.studentId || "N/A"}</span>
+                    <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider block">Student ID</span>
+                    <span className="text-[10px] font-black font-mono text-gray-800 mt-0.5 block tracking-wide truncate">{personalDetails?.studentId || "N/A"}</span>
                   </div>
                   <div className="pl-1">
-                    <span className="text-[7.5px] font-bold text-gray-400 uppercase tracking-wider block">Roll Number</span>
-                    <span className="text-[11px] font-black font-mono text-gray-750 mt-0.5 block tracking-wide">{personalDetails?.rollNumber || "N/A"}</span>
+                    <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider block">Roll Number</span>
+                    <span className="text-[10px] font-black font-mono text-gray-800 mt-0.5 block tracking-wide truncate">{personalDetails?.rollNumber || "N/A"}</span>
+                  </div>
+                  <div className="border-t border-r border-gray-200/60 pt-2 pr-1">
+                    <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider block">D.O.B</span>
+                    <span className="text-[10px] font-black font-mono text-gray-800 mt-0.5 block tracking-wide truncate">
+                      {personalDetails?.dob
+                        ? new Date(personalDetails.dob).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "N/A"}
+                    </span>
+                  </div>
+                  <div className="border-t border-gray-200/60 pt-2 pl-1">
+                    <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider block">Blood Group</span>
+                    <span className="text-[10px] font-black font-mono text-gray-800 mt-0.5 block tracking-wide truncate">{personalDetails?.bloodGroup || "N/A"}</span>
                   </div>
                 </div>
               </div>
@@ -486,7 +527,10 @@ const StudentIDCard = () => {
             </div>
 
             {/* Footer card */}
-            <div className="px-5 py-4 border-t border-gray-50 bg-gray-50/40 shrink-0 flex items-center justify-between relative z-10">
+            <div className={cn(
+              "border-t border-gray-50 bg-gray-50/40 shrink-0 flex items-center justify-between relative z-10",
+              orientation === "portrait" ? "px-5 py-4" : "px-4 py-2.5"
+            )}>
               <div className="text-left">
                 <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider block">Validity</span>
                 <span className="text-[10px] font-black text-gray-755 block mt-0.5">{currentYear} - {validityYear}</span>
@@ -520,7 +564,10 @@ const StudentIDCard = () => {
             </div>
 
             {/* Top Back Header */}
-            <div className="px-5 py-4.5 border-b border-gray-50 bg-gray-50/40 flex items-center gap-2 shrink-0">
+            <div className={cn(
+              "border-b border-gray-50 bg-gray-50/40 flex items-center gap-2 shrink-0",
+              orientation === "portrait" ? "px-5 py-4.5" : "px-4 py-2.5"
+            )}>
               <ShieldAlert className={cn("w-5 h-5", theme.text)} />
               <div>
                 <h4 className="text-[10px] font-black text-gray-850 uppercase tracking-wider leading-none">
@@ -533,43 +580,65 @@ const StudentIDCard = () => {
             </div>
 
             {/* Critical Fields */}
-            <div className="flex-1 p-5 flex flex-col justify-between gap-4 text-xs font-semibold text-gray-600 relative z-10">
+            <div className={cn(
+              "flex-1 flex relative z-10 text-xs font-semibold text-gray-600",
+              orientation === "portrait" ? "p-5 flex-col justify-between gap-4" : "py-3 px-4 flex-row justify-between gap-6"
+            )}>
               
-              <div className="space-y-3">
-                <div className="flex justify-between items-start gap-2 border-b border-gray-50 pb-2">
-                  <span className="text-[8.5px] font-black text-gray-400 uppercase block shrink-0 w-20">Guardian</span>
-                  <span className="text-[10px] font-bold text-gray-800 text-right">{contactDetails?.parentName}</span>
+              <div className={cn("w-full", orientation === "portrait" ? "space-y-2" : "flex-1 space-y-1.5")}>
+                <div className="flex justify-between items-start gap-2 border-b border-gray-50 pb-1.5">
+                  <span className="text-[8px] font-black text-gray-400 uppercase block shrink-0 w-20">Guardian</span>
+                  <span className="text-[9.5px] font-bold text-gray-800 text-right truncate">{contactDetails?.parentName}</span>
                 </div>
                 
-                <div className="flex justify-between items-start gap-2 border-b border-gray-50 pb-2">
-                  <span className="text-[8.5px] font-black text-gray-400 uppercase block shrink-0 w-20">Emergency Call</span>
-                  <span className="text-[10px] font-bold text-gray-800 font-mono text-right">{contactDetails?.parentMobile}</span>
+                <div className="flex justify-between items-start gap-2 border-b border-gray-50 pb-1.5">
+                  <span className="text-[8px] font-black text-gray-400 uppercase block shrink-0 w-20">Emergency Call</span>
+                  <span className="text-[9.5px] font-bold text-gray-800 font-mono text-right">{contactDetails?.parentMobile}</span>
                 </div>
 
-                <div className="flex justify-between items-start gap-2 pb-1">
-                  <span className="text-[8.5px] font-black text-gray-400 uppercase block shrink-0 w-20">Address</span>
-                  <span className="text-[9px] font-semibold text-gray-600 text-right leading-tight max-w-[200px] truncate-3-lines">
+                <div className="flex justify-between items-start gap-2 border-b border-gray-50 pb-1.5">
+                  <span className="text-[8px] font-black text-gray-400 uppercase block shrink-0 w-20">Student Phone</span>
+                  <span className="text-[9.5px] font-bold text-gray-800 font-mono text-right">{contactDetails?.phone || "N/A"}</span>
+                </div>
+
+                {personalDetails?.aadhar && (
+                  <div className="flex justify-between items-start gap-2 border-b border-gray-50 pb-1.5">
+                    <span className="text-[8px] font-black text-gray-400 uppercase block shrink-0 w-20">Aadhar No.</span>
+                    <span className="text-[9.5px] font-bold text-gray-800 font-mono text-right">{personalDetails.aadhar}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className={cn("flex flex-col justify-between", orientation === "portrait" ? "w-full gap-3" : "w-[170px] shrink-0")}>
+                <div className="flex justify-between items-start gap-2 pb-1 text-left">
+                  <span className="text-[8px] font-black text-gray-400 uppercase block shrink-0 w-12">Address</span>
+                  <span className="text-[9px] font-semibold text-gray-600 text-right leading-tight max-w-[150px] truncate-3-lines">
                     {contactDetails?.address || "Meerut Road, Little Flower Campus, Siwan, Bihar - 841506"}
                   </span>
                 </div>
-              </div>
 
-              {/* Disclaimer Terms */}
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-[7.5px] font-semibold text-slate-500 leading-normal">
-                This identity card is the property of Little Flower English School and is non-transferable.
-                Cardholders must carry it while on school premises and during official school events.
+                {/* Disclaimer Terms */}
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-[7px] font-semibold text-slate-500 leading-normal text-left">
+                  This card is the property of Little Flower English School. Cardholders must carry it while on school premises.
+                </div>
               </div>
 
             </div>
 
             {/* Bottom Footer signature & QR code */}
-            <div className="px-5 py-4.5 border-t border-gray-50 bg-gray-50/50 shrink-0 flex items-center justify-between relative z-10">
+            <div className={cn(
+              "border-t border-gray-50 bg-gray-50/50 shrink-0 flex items-center justify-between relative z-10",
+              orientation === "portrait" ? "px-5 py-4.5" : "px-4 py-2.5"
+            )}>
               
               <div className="flex items-center gap-2.5">
                 <img
                   src={finalQrCodeUrl}
                   alt="Student ID QR Code"
-                  className="w-14 h-14 shrink-0 border border-gray-100 p-0.5 rounded-lg bg-white object-contain"
+                  className={cn(
+                    "shrink-0 border border-gray-100 p-0.5 rounded-lg bg-white object-contain",
+                    orientation === "portrait" ? "w-14 h-14" : "w-12 h-12"
+                  )}
                   crossOrigin="anonymous"
                   onError={() => setQrImageError(true)}
                 />

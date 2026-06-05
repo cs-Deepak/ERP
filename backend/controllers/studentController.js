@@ -240,6 +240,8 @@ const getStudentProfile = async (req, res, next) => {
         dob: student.dob,
         studentPhoto: student.studentPhoto,
         bloodGroup: student.bloodGroup,
+        cast: student.cast,
+        aadhar: student.aadhar,
         qrCode: student.qrCode,
         barcode: student.barcode,
         customFields: student.customFields || {},
