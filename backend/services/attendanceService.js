@@ -56,8 +56,13 @@ class AttendanceService {
       class: classId,
       date: targetDate
     })
-    .populate('student', 'fullName rollNumber')
-    .sort({ 'student.rollNumber': 1 });
+    .populate('student', 'fullName rollNumber');
+
+    report.sort((a, b) => {
+      const rollA = a.student ? (parseInt(a.student.rollNumber) || 0) : 0;
+      const rollB = b.student ? (parseInt(b.student.rollNumber) || 0) : 0;
+      return rollA - rollB;
+    });
 
     return report;
   }
@@ -114,7 +119,8 @@ class AttendanceService {
     const startDate = new Date(parsedYear, parsedMonth - 1, 1);
     const endDate = new Date(parsedYear, parsedMonth, 0, 23, 59, 59, 999);
 
-    const students = await Student.find({ class: classId }).sort({ rollNumber: 1 });
+    const students = await Student.find({ class: classId });
+    students.sort((a, b) => (parseInt(a.rollNumber) || 0) - (parseInt(b.rollNumber) || 0));
     const attendanceRecords = await Attendance.find({
       class: classId,
       date: { $gte: startDate, $lte: endDate }

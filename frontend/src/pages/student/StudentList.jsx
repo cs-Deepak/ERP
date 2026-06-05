@@ -211,6 +211,20 @@ const StudentList = () => {
 
       const totalPagesExp = "{total_pages_count}";
 
+      // Helper function to truncate text that exceeds maximum column width
+      const truncateText = (text, maxWidth, fontStyle = "normal", fontSize = 8) => {
+        if (!text) return "";
+        doc.setFont("helvetica", fontStyle);
+        doc.setFontSize(fontSize);
+        if (doc.getTextWidth(text) <= maxWidth) return text;
+        
+        let truncated = text;
+        while (truncated.length > 0 && doc.getTextWidth(truncated + "...") > maxWidth) {
+          truncated = truncated.slice(0, -1);
+        }
+        return truncated + "...";
+      };
+
       const drawPageDecorations = (pageNumber) => {
         // Top orange/coral accent bar
         doc.setFillColor(232, 93, 42); // #e85d2a
@@ -323,23 +337,31 @@ const StudentList = () => {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8.5);
         doc.setTextColor(43, 27, 23);
-        doc.text(student.rollNumber || "N/A", 14, y + 4.5);
+        doc.text(truncateText(student.rollNumber || "N/A", 7, "bold", 8.5), 14, y + 4.5);
         
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        doc.text(student.studentId || "PENDING", 23, y + 4.5);
+        doc.text(truncateText(student.studentId || "PENDING", 32, "normal", 8), 23, y + 4.5);
 
         doc.setFont("helvetica", "bold");
-        doc.text(student.fullName || "N/A", 59, y + 4.5);
+        doc.text(truncateText(student.fullName || "N/A", 28, "bold", 8), 59, y + 4.5);
 
         doc.setFont("helvetica", "normal");
-        doc.text(`F: ${student.fatherName || "N/A"}`, 90, y + 4.5);
+        doc.text(truncateText(`F: ${student.fatherName || "N/A"}`, 29, "normal", 8), 90, y + 4.5);
         
-        doc.text(student.emergencyContact || "N/A", 122, y + 4.5);
+        doc.text(truncateText(student.emergencyContact || "N/A", 19, "normal", 8), 122, y + 4.5);
 
         const fullAddr = student.address || "N/A";
-        const addrPart1 = fullAddr.substring(0, 26);
-        const addrPart2 = fullAddr.length > 26 ? fullAddr.substring(26, 52) : "";
+        // Calculate wrapping address dynamically using splitTextToSize
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        const addrLines = doc.splitTextToSize(fullAddr, 35);
+        const addrPart1 = addrLines[0] || "N/A";
+        let addrPart2 = addrLines[1] || "";
+        if (addrLines.length > 2) {
+          addrPart2 = truncateText(addrLines.slice(1).join(" "), 35, "normal", 7.5);
+        }
+
         doc.text(addrPart1, 143, y + 4.5);
 
         const isStudentActive = (student.status || "Active").toLowerCase() === "active";
@@ -349,7 +371,7 @@ const StudentList = () => {
           doc.setTextColor(207, 79, 32); // Orange/Red 700
         }
         doc.setFont("helvetica", "bold");
-        doc.text(student.status || "Active", 181, y + 4.5);
+        doc.text(truncateText(student.status || "Active", 15, "bold", 8.5), 181, y + 4.5);
 
         // Draw Line 2
         doc.setFont("helvetica", "normal");
@@ -358,10 +380,10 @@ const StudentList = () => {
         
         doc.text(`Adm: ${admDate}`, 23, y + 9);
         doc.text(`Disc: ${student.discountPercentage || 0}%`, 59, y + 9);
-        doc.text(`M: ${student.motherName || "N/A"}`, 90, y + 9);
+        doc.text(truncateText(`M: ${student.motherName || "N/A"}`, 29, "normal", 7.5), 90, y + 9);
         
         if (student.phone && student.phone !== student.emergencyContact) {
-          doc.text(`Alt: ${student.phone}`, 122, y + 9);
+          doc.text(truncateText(`Alt: ${student.phone}`, 19, "normal", 7.5), 122, y + 9);
         }
 
         if (addrPart2) {

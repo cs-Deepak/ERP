@@ -84,7 +84,8 @@ const getAllStudents = async (req, res, next) => {
 
     const [students, total] = await Promise.all([
       Student.find(filter)
-        .sort({ createdAt: -1 })
+        .sort({ className: 1, rollNumber: 1 })
+        .collation({ locale: 'en', numericOrdering: true })
         .skip(skip)
         .limit(parseInt(limit)),
       Student.countDocuments(filter),

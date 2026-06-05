@@ -102,11 +102,9 @@ class AdminService {
     return student;
   }
 
-  /**
-   * Fetch all students in a specific class
-   */
   async getStudentsByClass(classId) {
-    const students = await Student.find({ class: classId }).sort({ rollNumber: 1 });
+    const students = await Student.find({ class: classId });
+    students.sort((a, b) => (parseInt(a.rollNumber) || 0) - (parseInt(b.rollNumber) || 0));
     return students;
   }
 
@@ -118,11 +116,9 @@ class AdminService {
     return classes;
   }
 
-  /**
-   * Get attendance summary for all students in a class
-   */
   async getClassAttendanceReport(classId) {
-    const students = await Student.find({ class: classId }).sort({ rollNumber: 1 });
+    const students = await Student.find({ class: classId });
+    students.sort((a, b) => (parseInt(a.rollNumber) || 0) - (parseInt(b.rollNumber) || 0));
     
     // Get unique dates where attendance was marked for this class
     const attendanceDates = await Attendance.distinct('date', { class: classId });
