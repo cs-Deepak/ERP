@@ -524,7 +524,11 @@ const ClassAttendanceReport = () => {
                       <tr
                         key={t.teacherId}
                         className="hover:bg-orange-50/30 transition-colors group cursor-pointer"
-                        onClick={() => navigate("/attendance")}
+                        onClick={() =>
+                          navigate(
+                            `/reports/attendance/analysis/staff/${t.teacherId}`
+                          )
+                        }
                       >
                         <td className="px-8 py-5 border-b border-gray-50">
                           <div className="flex items-center gap-4">

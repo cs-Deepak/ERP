@@ -27,6 +27,7 @@ import SubjectMaster from "./pages/SubjectMaster";
 import ClassSubjectMapping from "./pages/ClassSubjectMapping";
 import TimetableManagement from "./pages/TimetableManagement";
 import TeacherTimetableView from "./pages/TeacherTimetableView";
+import StaffAttendanceAnalysis from "./pages/StaffAttendanceAnalysis";
 import StaffCredentials from "./pages/StaffCredentials";
 
 // Protected Route Wrapper
@@ -220,6 +221,17 @@ function App() {
                 <ProtectedRoute>
                   <Layout>
                     <StudentAttendanceAnalysis />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/reports/attendance/analysis/staff/:teacherId"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Layout>
+                    <StaffAttendanceAnalysis />
                   </Layout>
                 </ProtectedRoute>
               }

@@ -113,6 +113,7 @@ class AdminService {
    */
   async getAllClasses() {
     const classes = await Class.find().populate('teacher', 'firstName lastName email');
+    classes.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
     return classes;
   }
 
@@ -251,7 +252,8 @@ class AdminService {
         totalHeld: overallTotalHeld,
         totalAttended: overallPresent,
         percentage: overallPercentage
-      }
+      },
+      records
     };
   }
 

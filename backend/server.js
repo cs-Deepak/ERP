@@ -29,6 +29,7 @@ const feeRoutes = require('./routes/feeRoutes');
 const academicRoutes = require('./routes/academicRoutes');
 const timetableRoutes = require('./routes/timetableRoutes');
 const adminTimetableRoutes = require('./routes/adminTimetableRoutes');
+const announcementRoutes = require('./routes/announcementRoutes');
 
 // Swagger
 const swaggerUi = require('swagger-ui-express');
@@ -123,6 +124,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/fees', feeRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/teachers', teacherRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // Swagger Docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));

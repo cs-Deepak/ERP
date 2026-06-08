@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import api from "../services/api";
 import {
   Search,
@@ -28,6 +29,66 @@ import { formatToINR } from "../utils/format";
 
 const FeeCollection = () => {
   const { addToast } = useToast();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state && location.state.searchStudentId) {
+      const studentIdToSearch = location.state.searchStudentId;
+      const loadPreFilledStudent = async () => {
+        setLoading(true);
+        try {
+          const studentRes = await api.get(`/students/${studentIdToSearch}`);
+          if (studentRes.data.success) {
+            const s = studentRes.data.data;
+            const classId = s.class?._id || s.class;
+            
+            setSelectedClass(classId);
+            setSearchQuery(s.rollNumber);
+            
+            const feeRes = await api.get(`/fees/${classId}/${s.rollNumber}`);
+            if (feeRes.data.success) {
+              const {
+                student: sData,
+                feeSummary,
+                ledger,
+                transactions: txs,
+              } = feeRes.data.data;
+              
+              setStudent({
+                id: sData.id,
+                name: sData.fullName,
+                roll: sData.rollNumber,
+                totalFee: feeSummary.totalFee,
+                paidFee: feeSummary.paidFee,
+                dueFee: feeSummary.dueFee,
+                class: sData.class,
+                ledger: ledger,
+              });
+              setTransactions(txs || []);
+              
+              const firstUnpaid = ledger?.monthlyBreakdown.find(
+                (m) => m.status !== "PAID"
+              );
+              if (firstUnpaid) {
+                setSelectedMonth(firstUnpaid.month);
+                setAmount(firstUnpaid.pending.toString());
+              }
+              
+              setCurrentStep("active");
+            }
+          }
+        } catch (error) {
+          console.error("Error loading pre-filled student:", error);
+          addToast("Failed to load student details", "error");
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      loadPreFilledStudent();
+    }
+  }, [location.state, addToast]);
+
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,7 +101,7 @@ const FeeCollection = () => {
   const [transactions, setTransactions] = useState([]);
   const [currentStep, setCurrentStep] = useState("selector"); // selector, active
   const [selectedMonth, setSelectedMonth] = useState("");
-  const [academicYear, setAcademicYear] = useState("2026-2027");
+  const [academicYear] = useState("2026-2027");
   const [classSummary, setClassSummary] = useState(null);
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
   const [schoolStats, setSchoolStats] = useState(null);

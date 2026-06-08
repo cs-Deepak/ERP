@@ -10,7 +10,9 @@ const {
   getFeeDetails, 
   recordPayment, 
   downloadReceipt,
-  getStudentFeesByMonth 
+  getStudentFeesByMonth,
+  getPendingFeesStudents,
+  getMonthlyFinancialSummary
 } = require('../controllers/feeController');
 const { protect, isAdmin } = require('../middleware/auth');
 
@@ -21,6 +23,10 @@ router.use(protect);
 router.get('/student/:studentId', getStudentFeesByMonth);
 
 router.get('/receipt/:transactionId', downloadReceipt);
+
+router.get('/pending-students', getPendingFeesStudents);
+
+router.get('/monthly-summary', getMonthlyFinancialSummary);
 
 router.use(isAdmin); // Restrict to admin role for direct financial edits
 

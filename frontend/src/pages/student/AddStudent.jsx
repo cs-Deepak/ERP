@@ -486,13 +486,17 @@ const AddStudent = () => {
 
                   {/* Cast */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Cast</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. General, OBC, SC/ST"
-                      className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-semibold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all"
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Cast / Category</label>
+                    <select
+                      className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all appearance-none cursor-pointer"
                       {...register("cast")}
-                    />
+                    >
+                      <option value="">Select Category</option>
+                      <option value="General">General</option>
+                      <option value="OBC">OBC</option>
+                      <option value="SC">SC</option>
+                      <option value="ST">ST</option>
+                    </select>
                   </div>
 
                   {/* Aadhar Number */}

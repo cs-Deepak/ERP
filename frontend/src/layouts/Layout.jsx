@@ -131,6 +131,45 @@ const Layout = ({ children }) => {
   );
   const activeTabLabel = activeItem ? activeItem.label : "Dashboard";
 
+  const getPageTitle = () => {
+    const path = location.pathname;
+    
+    // Specific custom titles
+    if (path.startsWith("/students/edit/")) return "Edit Student Profile";
+    if (path.includes("/idcard")) return "ID Card Console";
+    if (path === "/students/new") return "Enroll Student";
+    if (path === "/students/bulk-idcards") return "Bulk ID Cards";
+    if (path === "/reports/attendance") return "Attendance Analytics";
+    if (path === "/admin/credentials") return "Credentials Manager";
+    if (path === "/academic/timetable") return "Timetable Management";
+    if (path === "/academic/subjects") return "Subject Master";
+    if (path === "/academic/mappings") return "Class Mappings";
+    
+    const segments = path.split("/").filter(Boolean);
+    if (segments.length === 0) return "Dashboard";
+    
+    const lastSegment = segments[segments.length - 1];
+    
+    // Check if the last segment is a 24-character MongoDB ObjectId
+    const isMongoId = /^[0-9a-fA-F]{24}$/.test(lastSegment);
+    if (isMongoId) {
+      if (segments.length > 1) {
+        const prevSegment = segments[segments.length - 2];
+        if (prevSegment === "edit") return "Edit Student Profile";
+        if (prevSegment === "students") return "Student Profile";
+        return prevSegment.replace("-", " ");
+      }
+      return "Detail View";
+    }
+    
+    // Check if the last segment is a formatted Student ID (STU-XXXX-XXXX)
+    if (lastSegment.startsWith("STU-")) {
+      return "Student Profile";
+    }
+    
+    return lastSegment.replace("-", " ");
+  };
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
       {/* Mobile Sidebar Overlay */}
@@ -233,8 +272,7 @@ const Layout = ({ children }) => {
             <div className="flex flex-col">
               <h1 className="text-lg sm:text-2xl font-black text-gray-900 capitalize tracking-tight flex items-center gap-2">
                 <span className="hidden lg:inline text-gray-300">/</span>
-                {location.pathname.split("/").pop()?.replace("-", " ") ||
-                  "Dashboard"}
+                {getPageTitle()}
               </h1>
               <p className="hidden sm:block text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none mt-1">
                 Little Flower Educational Enterprise

@@ -188,6 +188,50 @@ class AttendanceService {
   }
 
   /**
+   * Get detailed attendance analysis for a single teacher (for yearly calendar view)
+   * @param {string} teacherId - ID of the teacher
+   */
+  async getTeacherAttendanceAnalysis(teacherId) {
+    const teacher = await Teacher.findById(teacherId);
+    if (!teacher) throw new Error('Teacher not found');
+
+    const records = await StaffAttendance.find({ teacher: teacherId }).sort({ date: 1 });
+
+    const totalDays = records.length;
+    const presentCount = records.filter(r => r.status === 'Present').length;
+    const absentCount = records.filter(r => r.status === 'Absent').length;
+    const leaveCount = records.filter(r => r.status === 'Leave').length;
+    const lateCount = records.filter(r => r.status === 'Late').length;
+
+    const attendancePercentage = totalDays > 0
+      ? (((presentCount + lateCount) / totalDays) * 100).toFixed(2)
+      : '0.00';
+
+    return {
+      teacherInfo: {
+        name: `${teacher.firstName} ${teacher.lastName}`,
+        subject: teacher.subject || 'N/A',
+        phone: teacher.phone || 'N/A',
+        email: teacher.email || 'N/A',
+        employeeId: teacher.employeeId || teacher._id.toString().slice(-8).toUpperCase()
+      },
+      overallAttendance: {
+        totalDays,
+        presentCount,
+        absentCount,
+        leaveCount,
+        lateCount,
+        percentage: attendancePercentage
+      },
+      records: records.map(r => ({
+        date: r.date,
+        status: r.status,
+        remarks: r.remarks || ''
+      }))
+    };
+  }
+
+  /**
    * Get overall staff attendance summary for all teachers
    */
   async getStaffAttendanceSummary() {

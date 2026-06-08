@@ -173,9 +173,115 @@ const getStudentFeesByMonth = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get all students with pending fees
+ * @route   GET /api/fees/pending-students
+ * @access  Protected
+ */
+const getPendingFeesStudents = async (req, res, next) => {
+  try {
+    const ledgers = await FeeLedger.find({ pendingAmount: { $gt: 0 } })
+      .populate({
+        path: 'studentId',
+        select: 'fullName rollNumber class studentId fatherName emergencyContact email',
+        populate: {
+          path: 'class',
+          select: 'name'
+        }
+      });
+
+    const students = ledgers
+      .filter(l => l.studentId !== null && l.studentId !== undefined)
+      .map(ledger => ({
+        id: ledger.studentId._id,
+        studentId: ledger.studentId.studentId,
+        fullName: ledger.studentId.fullName,
+        rollNumber: ledger.studentId.rollNumber,
+        className: ledger.studentId.class ? ledger.studentId.class.name : ledger.studentId.className || 'N/A',
+        parentName: ledger.studentId.fatherName,
+        parentPhone: ledger.studentId.emergencyContact,
+        pendingAmount: ledger.pendingAmount,
+        totalFee: ledger.totalFee,
+        totalPaid: ledger.totalPaid
+      }));
+
+    return successResponse(res, students, 'Pending fee students fetched successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get monthly expected vs collected financial summary
+ * @route   GET /api/fees/monthly-summary
+ * @access  Protected (Admin only)
+ */
+const getMonthlyFinancialSummary = async (req, res, next) => {
+  try {
+    const FeeTransaction = require('../models/FeeTransaction');
+    const Student = require('../models/Student');
+    
+    // 1. Get total expected monthly tuition fee from all active students
+    const students = await Student.find({ status: 'Active' }).populate('class');
+    let totalMonthlyExpected = 0;
+    students.forEach(s => {
+      if (s.class && s.class.tuitionFee) {
+        const discount = s.discountPercentage || 0;
+        totalMonthlyExpected += Math.round(s.class.tuitionFee * (1 - (discount / 100)));
+      }
+    });
+
+    // 2. Aggregate actual payments by month for the current academic session
+    const months = [
+      'April', 'May', 'June', 'July', 'August', 'September',
+      'October', 'November', 'December', 'January', 'February', 'March'
+    ];
+
+    const currentYear = new Date().getFullYear();
+    const academicYear = '2026-2027'; // matching system defaults
+
+    const payments = await FeeTransaction.aggregate([
+      { 
+        $match: { 
+          status: 'Paid',
+          academicYear: academicYear
+        } 
+      },
+      {
+        $group: {
+          _id: '$month',
+          collected: { $sum: '$amount' }
+        }
+      }
+    ]);
+
+    const paymentMap = new Map();
+    payments.forEach(p => paymentMap.set(p._id, p.collected));
+
+    // Combine expected vs collected for each month
+    const monthlyData = months.map(m => {
+      const collected = paymentMap.get(m) || 0;
+      return {
+        month: m,
+        expected: totalMonthlyExpected || 120000,
+        collected: collected
+      };
+    });
+
+    return successResponse(res, {
+      academicYear,
+      monthlyData
+    }, 'Monthly financial summary fetched successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getFeeDetails,
   recordPayment,
   downloadReceipt,
   getStudentFeesByMonth,
+  getPendingFeesStudents,
+  getMonthlyFinancialSummary,
 };

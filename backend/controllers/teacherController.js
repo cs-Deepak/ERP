@@ -174,6 +174,7 @@ const getTeacherDashboardStats = async (req, res, next) => {
 
     // Fetch full Class documents for the assigned classes to calculate student counts
     const classes = await Class.find({ _id: { $in: classIds } });
+    classes.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
     
     // Total Students across all assigned classes
     const totalStudents = classes.reduce((acc, c) => acc + (c.students ? c.students.length : 0), 0);

@@ -23,6 +23,30 @@ import { cn } from "../utils/cn";
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const SLOT_TYPES = ["Theory", "Lab", "Project", "Break"];
 
+const incrementTimeByOneHour = (timeStr) => {
+  const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return "09:00 AM";
+
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  let ampm = match[3].toUpperCase();
+
+  if (ampm === "PM" && hours !== 12) {
+    hours += 12;
+  } else if (ampm === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  hours = (hours + 1) % 24;
+
+  ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+
+  const formattedHours = hours.toString().padStart(2, "0");
+  return `${formattedHours}:${minutes} ${ampm}`;
+};
+
 const TimetableManagement = () => {
   const { addToast } = useToast();
   const [classes, setClasses] = useState([]);
@@ -112,13 +136,26 @@ const TimetableManagement = () => {
   const addSlot = (dayIndex) => {
     setTimetable((prev) => {
       const updatedSchedule = [...prev.weeklySchedule];
+      const daySlots = updatedSchedule[dayIndex].slots || [];
+      
+      let nextStartTime = "08:00 AM";
+      let nextEndTime = "09:00 AM";
+      
+      if (daySlots.length > 0) {
+        const lastSlot = daySlots[daySlots.length - 1];
+        if (lastSlot.endTime) {
+          nextStartTime = lastSlot.endTime;
+          nextEndTime = incrementTimeByOneHour(lastSlot.endTime);
+        }
+      }
+
       updatedSchedule[dayIndex] = {
         ...updatedSchedule[dayIndex],
         slots: [
-          ...updatedSchedule[dayIndex].slots,
+          ...daySlots,
           {
-            startTime: "08:00 AM",
-            endTime: "09:00 AM",
+            startTime: nextStartTime,
+            endTime: nextEndTime,
             subject: "",
             teacher: "",
             type: "Theory",

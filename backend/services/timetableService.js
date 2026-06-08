@@ -59,6 +59,8 @@ exports.getTeacherAssignedClasses = async (userId) => {
     }
   });
 
+  uniqueClasses.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
   return uniqueClasses;
 };
 

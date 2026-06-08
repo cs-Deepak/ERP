@@ -355,7 +355,7 @@ const ClassManagement = () => {
                         </div>
                       </td>
                       <td className="px-10 py-6 text-right">
-                        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+                        <div className="flex items-center justify-end gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all transform translate-x-0 md:translate-x-4 md:group-hover:translate-x-0">
                           <button
                             onClick={() => handleOpenModal(cls)}
                             className="p-3 text-gray-400 hover:text-emerald-600 hover:bg-white rounded-2xl shadow-sm transition-all border border-transparent hover:border-gray-100"

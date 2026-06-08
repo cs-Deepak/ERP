@@ -85,6 +85,11 @@ const studentSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    section: {
+      type: String,
+      trim: true,
+      default: 'A',
+    },
     aadhar: {
       type: String,
       trim: true,

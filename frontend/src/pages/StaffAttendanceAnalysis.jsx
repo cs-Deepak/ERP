@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  GraduationCap,
   CalendarDays,
   Target,
   FileText,
@@ -14,7 +13,10 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
-  Calendar,
+  Phone,
+  Mail,
+  Clock,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "../utils/cn";
 import api from "../services/api";
@@ -25,8 +27,8 @@ import Skeleton, {
   TableSkeleton,
 } from "../components/ui/Skeleton";
 
-const StudentAttendanceAnalysis = () => {
-  const { studentId } = useParams();
+const StaffAttendanceAnalysis = () => {
+  const { teacherId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
@@ -35,19 +37,19 @@ const StudentAttendanceAnalysis = () => {
 
   useEffect(() => {
     fetchAnalysis();
-  }, [studentId]);
+  }, [teacherId]);
 
   const fetchAnalysis = async () => {
     setLoading(true);
     try {
       const response = await api.get(
-        `/admin/attendance/analysis/student/${studentId}`,
+        `/attendance/staff/analysis/${teacherId}`,
       );
       if (response.data.success) {
         setData(response.data.data);
       }
     } catch (error) {
-      console.error("Error fetching student attendance analysis:", error);
+      console.error("Error fetching teacher attendance analysis:", error);
     } finally {
       setTimeout(() => setLoading(false), 800);
     }
@@ -74,12 +76,12 @@ const StudentAttendanceAnalysis = () => {
     );
   }
 
-  if (!data || !data.studentInfo) {
+  if (!data || !data.teacherInfo) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <EmptyState
           title="Analysis Not Found"
-          description="We couldn't generate the attendance analysis for this student. They might not exist or have no records."
+          description="We couldn't generate the attendance analysis for this staff member. They might not exist or have no records."
           icon={User}
           action={
             <Button onClick={() => navigate(-1)} variant="outline">
@@ -91,7 +93,7 @@ const StudentAttendanceAnalysis = () => {
     );
   }
 
-  const { studentInfo, subjects, overallAttendance } = data;
+  const { teacherInfo, overallAttendance } = data;
   const overallPercentage = parseFloat(overallAttendance.percentage);
   const isCritical = overallPercentage < 75;
 
@@ -101,15 +103,13 @@ const StudentAttendanceAnalysis = () => {
   ];
 
   const getMonthDaysList = (year, monthIndex) => {
-    const firstDayIndex = new Date(year, monthIndex, 1).getDay(); // 0 is Sun, 6 is Sat
+    const firstDayIndex = new Date(year, monthIndex, 1).getDay();
     const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-    
+
     const days = [];
-    // Fill empty leading slots
     for (let i = 0; i < firstDayIndex; i++) {
       days.push(null);
     }
-    // Fill actual days
     for (let d = 1; d <= daysInMonth; d++) {
       days.push(d);
     }
@@ -118,7 +118,7 @@ const StudentAttendanceAnalysis = () => {
 
   const isWeekendDay = (year, monthIndex, day) => {
     const dayOfWeek = new Date(year, monthIndex, day).getDay();
-    return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
+    return dayOfWeek === 0 || dayOfWeek === 6;
   };
 
   // Build key mapping of date to attendance record for fast lookup
@@ -163,13 +163,6 @@ const StudentAttendanceAnalysis = () => {
     return "text-rose-600 bg-rose-50 border-rose-100";
   };
 
-  const getPercentageProgressColor = (percentage) => {
-    if (percentage >= 75)
-      return "bg-gradient-to-r from-emerald-400 to-emerald-500";
-    if (percentage >= 60) return "bg-gradient-to-r from-amber-400 to-amber-500";
-    return "bg-gradient-to-r from-rose-400 to-rose-500";
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
       {/* Top Navigation */}
@@ -177,17 +170,17 @@ const StudentAttendanceAnalysis = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="p-3 bg-white border border-gray-100 rounded-2xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition-all active:scale-95 shadow-sm"
+            className="p-3 bg-white border border-gray-100 rounded-2xl text-gray-500 hover:text-orange-600 hover:bg-orange-50 hover:border-orange-100 transition-all active:scale-95 shadow-sm"
           >
             <ArrowLeft size={22} />
           </button>
           <div>
             <h2 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-              <FileText className="text-indigo-600" size={28} />
-              Attendance Analysis
+              <FileText className="text-orange-600" size={28} />
+              Staff Attendance Analysis
             </h2>
             <p className="text-gray-500 font-medium text-sm mt-1">
-              Comprehensive subject-wise performance report
+              Comprehensive attendance history & yearly calendar view
             </p>
           </div>
         </div>
@@ -203,53 +196,62 @@ const StudentAttendanceAnalysis = () => {
               Critical Attendance Warning
             </h4>
             <p className="text-sm font-medium text-rose-600/90 mt-0.5 leading-relaxed">
-              Student has fallen below the minimum required 75% overall
-              attendance. Please arrange a consultation or issue a formal
-              notice.
+              Staff member has fallen below the minimum required 75% attendance.
+              Please arrange a meeting or issue a formal notice.
             </p>
           </div>
         </div>
       )}
 
-      {/* Student Profile Card (Section A) */}
+      {/* Teacher Profile Card */}
       <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/50 rounded-full -mr-24 -mt-24 transition-transform duration-700 group-hover:scale-110" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-50/50 rounded-full -mr-24 -mt-24 transition-transform duration-700 group-hover:scale-110" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
-          <div className="w-28 h-28 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-xl shadow-indigo-200 text-white shrink-0 transform transition-transform group-hover:-translate-y-1">
+          <div className="w-28 h-28 bg-gradient-to-br from-orange-500 to-rose-600 rounded-3xl flex items-center justify-center shadow-xl shadow-orange-200 text-white shrink-0 transform transition-transform group-hover:-translate-y-1">
             <span className="text-4xl font-black tracking-tighter">
-              {studentInfo.name.charAt(0)}
-              {studentInfo.name.split(" ")[1]?.[0] || ""}
+              {teacherInfo.name.charAt(0)}
+              {teacherInfo.name.split(" ")[1]?.[0] || ""}
             </span>
           </div>
 
           <div className="text-center md:text-left flex-1 min-w-0">
             <h3 className="text-3xl font-black text-gray-900 tracking-tight truncate">
-              {studentInfo.name}
+              {teacherInfo.name}
             </h3>
             <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-3">
               <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-xl border border-gray-100">
-                <Hash className="text-gray-400" size={16} />
+                <BookOpen className="text-gray-400" size={16} />
                 <span className="text-sm font-bold text-gray-700">
-                  Roll No: {studentInfo.rollNo}
+                  {teacherInfo.subject}
                 </span>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50/50 rounded-xl border border-indigo-50">
-                <GraduationCap className="text-indigo-400" size={16} />
-                <span className="text-sm font-bold text-indigo-700">
-                  Class: {studentInfo.className}
-                </span>
-              </div>
+              {teacherInfo.phone && teacherInfo.phone !== "N/A" && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-orange-50/50 rounded-xl border border-orange-50">
+                  <Phone className="text-orange-400" size={16} />
+                  <span className="text-sm font-bold text-orange-700">
+                    {teacherInfo.phone}
+                  </span>
+                </div>
+              )}
+              {teacherInfo.email && teacherInfo.email !== "N/A" && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-rose-50/50 rounded-xl border border-rose-50">
+                  <Mail className="text-rose-400" size={16} />
+                  <span className="text-sm font-bold text-rose-700">
+                    {teacherInfo.email}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center gap-2 px-4 py-2 bg-purple-50/50 rounded-xl border border-purple-50">
-                <BookOpen className="text-purple-400" size={16} />
+                <Hash className="text-purple-400" size={16} />
                 <span className="text-sm font-bold text-purple-700">
-                  Program: {studentInfo.program}
+                  ID: {teacherInfo.employeeId}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Overall Attendance Summary (Section C) */}
+          {/* Overall Attendance Summary */}
           <div className="w-full md:w-auto mt-6 md:mt-0 flex flex-col items-center md:items-end justify-center bg-gray-50/50 md:bg-transparent rounded-2xl p-6 md:p-0">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
               Overall Standing
@@ -270,12 +272,12 @@ const StudentAttendanceAnalysis = () => {
             </div>
             <div className="mt-3 flex gap-4 text-xs font-bold text-gray-500">
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-indigo-200" />
-                Held: {overallAttendance.totalHeld}
+                <div className="w-2 h-2 rounded-full bg-orange-200" />
+                Total: {overallAttendance.totalDays}
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                Attended: {overallAttendance.totalAttended}
+                Present: {overallAttendance.presentCount}
               </div>
             </div>
           </div>
@@ -289,7 +291,7 @@ const StudentAttendanceAnalysis = () => {
           className={cn(
             "flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
             activeView === "overview"
-              ? "bg-white text-indigo-600 shadow-md font-bold"
+              ? "bg-white text-orange-600 shadow-md font-bold"
               : "text-gray-500 hover:text-gray-900"
           )}
         >
@@ -301,7 +303,7 @@ const StudentAttendanceAnalysis = () => {
           className={cn(
             "flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
             activeView === "calendar"
-              ? "bg-white text-indigo-600 shadow-md font-bold"
+              ? "bg-white text-orange-600 shadow-md font-bold"
               : "text-gray-500 hover:text-gray-900"
           )}
         >
@@ -312,165 +314,230 @@ const StudentAttendanceAnalysis = () => {
 
       {activeView === "overview" ? (
         <>
-          {/* Subject-wise Attendance Table (Section B) */}
+          {/* Stats Summary Cards */}
           <h3 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-3 pt-4 px-2">
-            <Target className="text-gray-400" size={24} />
-            Subject-wise Performance
+            <TrendingUp className="text-gray-400" size={24} />
+            Attendance Summary
           </h3>
 
-          {subjects.length > 0 ? (
-            <>
-              {/* Desktop Table View */}
-              <div className="hidden md:block bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50/80">
-                      <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 w-16 text-center">
-                        Sr
-                      </th>
-                      <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
-                        Subject Name
-                      </th>
-                      <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
-                        Code
-                      </th>
-                      <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-center">
-                        Classes Held
-                      </th>
-                      <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-center">
-                        Attended
-                      </th>
-                      <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 min-w-[200px]">
-                        Attendance %
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {subjects.map((sub, idx) => (
-                      <tr
-                        key={sub.subjectCode}
-                        className="hover:bg-gray-50/50 transition-colors group"
-                      >
-                        <td className="px-8 py-5 border-b border-gray-50 font-black text-gray-300 text-center text-xs">
-                          {(idx + 1).toString().padStart(2, "0")}
-                        </td>
-                        <td className="px-8 py-5 border-b border-gray-50">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center font-black text-sm shrink-0">
-                              {sub.subjectName.substring(0, 2).toUpperCase()}
-                            </div>
-                            <span className="font-bold text-gray-700 group-hover:text-indigo-600 transition-colors">
-                              {sub.subjectName}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-8 py-5 border-b border-gray-50 font-bold text-gray-400 text-xs tracking-wider">
-                          {sub.subjectCode}
-                        </td>
-                        <td className="px-6 py-5 border-b border-gray-50 text-center">
-                          <span className="px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-xs font-bold border border-gray-100">
-                            {sub.totalHeld}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5 border-b border-gray-50 text-center">
-                          <span className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold border border-emerald-50">
-                            {sub.totalAttended}
-                          </span>
-                        </td>
-                        <td className="px-8 py-5 border-b border-gray-50">
-                          <div className="flex items-center gap-4">
-                            <div
-                              className={cn(
-                                "w-16 text-center py-1.5 rounded-lg text-xs font-black border",
-                                getPercentageColor(parseFloat(sub.percentage)),
-                              )}
-                            >
-                              {sub.percentage}%
-                            </div>
-                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                              <div
-                                className={cn(
-                                  "h-full rounded-full transition-all duration-1000",
-                                  getPercentageProgressColor(
-                                    parseFloat(sub.percentage),
-                                  ),
-                                )}
-                                style={{ width: `${sub.percentage}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile Card View */}
-              <div className="md:hidden space-y-4">
-                {subjects.map((sub, idx) => (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
+            {[
+              {
+                label: "Present",
+                value: overallAttendance.presentCount,
+                color: "emerald",
+                icon: CheckCircle,
+                sub: `${overallAttendance.totalDays > 0 ? ((overallAttendance.presentCount / overallAttendance.totalDays) * 100).toFixed(1) : 0}% of total`,
+              },
+              {
+                label: "Absent",
+                value: overallAttendance.absentCount,
+                color: "rose",
+                icon: XCircle,
+                sub: `${overallAttendance.totalDays > 0 ? ((overallAttendance.absentCount / overallAttendance.totalDays) * 100).toFixed(1) : 0}% of total`,
+              },
+              {
+                label: "Late",
+                value: overallAttendance.lateCount,
+                color: "indigo",
+                icon: Clock,
+                sub: `${overallAttendance.totalDays > 0 ? ((overallAttendance.lateCount / overallAttendance.totalDays) * 100).toFixed(1) : 0}% of total`,
+              },
+              {
+                label: "Leave",
+                value: overallAttendance.leaveCount,
+                color: "amber",
+                icon: CalendarDays,
+                sub: `${overallAttendance.totalDays > 0 ? ((overallAttendance.leaveCount / overallAttendance.totalDays) * 100).toFixed(1) : 0}% of total`,
+              },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-lg transition-all duration-300"
+              >
+                <div
+                  className={cn(
+                    "absolute top-0 right-0 w-24 h-24 rounded-full -mr-8 -mt-8 opacity-10 transition-transform group-hover:scale-125",
+                    stat.color === "emerald" && "bg-emerald-500",
+                    stat.color === "rose" && "bg-rose-500",
+                    stat.color === "indigo" && "bg-indigo-500",
+                    stat.color === "amber" && "bg-amber-500",
+                  )}
+                />
+                <div className="relative z-10">
                   <div
-                    key={sub.subjectCode}
-                    className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden group"
+                    className={cn(
+                      "w-12 h-12 rounded-2xl flex items-center justify-center mb-4",
+                      stat.color === "emerald" && "bg-emerald-50 text-emerald-600",
+                      stat.color === "rose" && "bg-rose-50 text-rose-600",
+                      stat.color === "indigo" && "bg-indigo-50 text-indigo-600",
+                      stat.color === "amber" && "bg-amber-50 text-amber-600",
+                    )}
                   >
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
-                    <div className="relative z-10">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                            {sub.subjectCode}
-                          </p>
-                          <h4 className="font-black text-gray-800 text-lg leading-tight">
-                            {sub.subjectName}
-                          </h4>
-                        </div>
-                        <div
-                          className={cn(
-                            "px-3 py-1 rounded-lg border font-black text-xs",
-                            getPercentageColor(parseFloat(sub.percentage)),
-                          )}
-                        >
-                          {sub.percentage}%
-                        </div>
-                      </div>
-
-                      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-4">
-                        <div
-                          className={cn(
-                            "h-full rounded-full",
-                            getPercentageProgressColor(parseFloat(sub.percentage)),
-                          )}
-                          style={{ width: `${sub.percentage}%` }}
-                        />
-                      </div>
-
-                      <div className="flex justify-between items-center text-xs font-bold bg-gray-50 p-3 rounded-xl border border-gray-100">
-                        <div className="flex flex-col gap-1 items-center flex-1 border-r border-gray-200">
-                          <span className="text-gray-400 uppercase tracking-wider text-[9px]">
-                            Classes Held
-                          </span>
-                          <span className="text-gray-700">{sub.totalHeld}</span>
-                        </div>
-                        <div className="flex flex-col gap-1 items-center flex-1">
-                          <span className="text-gray-400 uppercase tracking-wider text-[9px]">
-                            Attended
-                          </span>
-                          <span className="text-emerald-600">
-                            {sub.totalAttended}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    <stat.icon size={22} />
                   </div>
-                ))}
+                  <p className="text-4xl font-black text-gray-900 tracking-tight">
+                    {stat.value}
+                  </p>
+                  <p className="font-black text-gray-500 text-sm mt-1 uppercase tracking-wider">
+                    {stat.label}
+                  </p>
+                  <p className="text-xs font-bold text-gray-400 mt-1">{stat.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Overall Progress bar */}
+          <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  Overall Attendance Rate
+                </p>
+                <h4 className="text-2xl font-black text-gray-900 tracking-tight mt-1">
+                  {overallAttendance.percentage}%
+                </h4>
+              </div>
+              <div
+                className={cn(
+                  "px-4 py-2 rounded-2xl text-sm font-black border",
+                  getPercentageColor(overallPercentage)
+                )}
+              >
+                {overallPercentage >= 75
+                  ? "Good Standing"
+                  : overallPercentage >= 60
+                    ? "Needs Attention"
+                    : "Critical"}
+              </div>
+            </div>
+            <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-1000",
+                  overallPercentage >= 75
+                    ? "bg-gradient-to-r from-emerald-400 to-emerald-500"
+                    : overallPercentage >= 60
+                      ? "bg-gradient-to-r from-amber-400 to-amber-500"
+                      : "bg-gradient-to-r from-rose-400 to-rose-500"
+                )}
+                style={{ width: `${Math.min(overallPercentage, 100)}%` }}
+              />
+            </div>
+            <div className="flex gap-6 mt-4 text-xs font-bold text-gray-400">
+              <span>Total Working Days: {overallAttendance.totalDays}</span>
+              <span className="text-emerald-600">Present: {overallAttendance.presentCount}</span>
+              <span className="text-rose-600">Absent: {overallAttendance.absentCount}</span>
+            </div>
+          </div>
+
+          {/* Recent Records Table */}
+          {data.records && data.records.length > 0 ? (
+            <>
+              <h3 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-3 pt-2 px-2">
+                <CalendarDays className="text-gray-400" size={24} />
+                Recent Attendance Records
+              </h3>
+              <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50/80">
+                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 w-16 text-center">
+                          Sr
+                        </th>
+                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                          Date
+                        </th>
+                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                          Day
+                        </th>
+                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                          Status
+                        </th>
+                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                          Remarks
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...data.records].reverse().slice(0, 15).map((record, idx) => {
+                        const d = new Date(record.date);
+                        const dateStr = d.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        });
+                        const dayStr = d.toLocaleDateString("en-US", { weekday: "long" });
+                        const status = record.status;
+                        return (
+                          <tr
+                            key={idx}
+                            className="hover:bg-gray-50/50 transition-colors group"
+                          >
+                            <td className="px-8 py-5 border-b border-gray-50 font-black text-gray-300 text-center text-xs">
+                              {(idx + 1).toString().padStart(2, "0")}
+                            </td>
+                            <td className="px-8 py-5 border-b border-gray-50 font-bold text-gray-700">
+                              {dateStr}
+                            </td>
+                            <td className="px-8 py-5 border-b border-gray-50 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                              {dayStr}
+                            </td>
+                            <td className="px-8 py-5 border-b border-gray-50">
+                              <span
+                                className={cn(
+                                  "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-2 border",
+                                  status === "Present" && "bg-emerald-50 text-emerald-600 border-emerald-100",
+                                  status === "Absent" && "bg-rose-50 text-rose-600 border-rose-100",
+                                  status === "Leave" && "bg-amber-50 text-amber-600 border-amber-100",
+                                  status === "Late" && "bg-indigo-50 text-indigo-600 border-indigo-100",
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "w-1.5 h-1.5 rounded-full",
+                                    status === "Present" && "bg-emerald-500",
+                                    status === "Absent" && "bg-rose-500",
+                                    status === "Leave" && "bg-amber-500",
+                                    status === "Late" && "bg-indigo-500",
+                                  )}
+                                />
+                                {status}
+                              </span>
+                            </td>
+                            <td className="px-8 py-5 border-b border-gray-50 text-xs text-gray-400 font-medium">
+                              {record.remarks || <span className="italic text-gray-200">—</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {data.records.length > 15 && (
+                  <div className="px-8 py-4 border-t border-gray-50 bg-gray-50/30">
+                    <p className="text-xs font-bold text-gray-400 text-center">
+                      Showing 15 most recent records · Switch to{" "}
+                      <button
+                        onClick={() => setActiveView("calendar")}
+                        className="text-orange-600 underline-offset-2 underline"
+                      >
+                        Yearly Calendar
+                      </button>{" "}
+                      to view all {data.records.length} records
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           ) : (
             <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-12">
               <EmptyState
-                title="No Subjects Found"
-                description="We couldn't find any subject attendance records for this student's class."
-                icon={BookOpen}
+                title="No Attendance Records"
+                description="No attendance records found for this staff member yet."
+                icon={CalendarDays}
               />
             </div>
           )}
@@ -482,7 +549,7 @@ const StudentAttendanceAnalysis = () => {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSelectedYear((prev) => prev - 1)}
-                className="p-3 bg-gray-50 border border-gray-100 rounded-2xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition-all active:scale-95 shadow-sm"
+                className="p-3 bg-gray-50 border border-gray-100 rounded-2xl text-gray-500 hover:text-orange-600 hover:bg-orange-50 hover:border-orange-100 transition-all active:scale-95 shadow-sm"
               >
                 <ChevronLeft size={18} />
               </button>
@@ -491,7 +558,7 @@ const StudentAttendanceAnalysis = () => {
               </span>
               <button
                 onClick={() => setSelectedYear((prev) => prev + 1)}
-                className="p-3 bg-gray-50 border border-gray-100 rounded-2xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition-all active:scale-95 shadow-sm"
+                className="p-3 bg-gray-50 border border-gray-100 rounded-2xl text-gray-500 hover:text-orange-600 hover:bg-orange-50 hover:border-orange-100 transition-all active:scale-95 shadow-sm"
               >
                 <ChevronRight size={18} />
               </button>
@@ -522,7 +589,7 @@ const StudentAttendanceAnalysis = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {monthNames.map((monthName, monthIndex) => {
               const days = getMonthDaysList(selectedYear, monthIndex);
-              
+
               // Calculate monthly stats
               const monthlyRecords = yearRecords.filter(
                 (r) => new Date(r.date).getMonth() === monthIndex
@@ -573,7 +640,6 @@ const StudentAttendanceAnalysis = () => {
                         return <div key={`empty-${idx}`} />;
                       }
 
-                      // Lookup attendance in map
                       const key = `${selectedYear}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                       const record = attendanceMap[key];
                       const isWeekend = isWeekendDay(selectedYear, monthIndex, day);
@@ -626,4 +692,4 @@ const StudentAttendanceAnalysis = () => {
   );
 };
 
-export default StudentAttendanceAnalysis;
+export default StaffAttendanceAnalysis;

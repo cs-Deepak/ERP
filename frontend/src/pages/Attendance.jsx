@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Calendar,
   Users,
@@ -14,7 +14,8 @@ import {
   History,
   UserCheck,
   ClipboardList,
-  AlertCircle
+  AlertCircle,
+  BarChart2,
 } from "lucide-react";
 import Button from "../components/ui/Button";
 import Skeleton, { TableSkeleton } from "../components/ui/Skeleton";
@@ -28,6 +29,7 @@ const Attendance = () => {
   const { user } = useAuth();
   const { addToast } = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Navigation states
   const [activeTab, setActiveTab] = useState("mark-students");
@@ -1135,10 +1137,14 @@ const Attendance = () => {
                         <th className="px-6 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest w-40 text-center border-l border-gray-100 bg-white">
                           Monthly Ratio (P/A/L/T)
                         </th>
+                        {/* Analytics Column */}
+                        <th className="px-4 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest w-16 text-center border-l border-gray-100 bg-white">
+                          Analysis
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                      {staffHistory
+                       {staffHistory
                         .filter(item => (item.teacher?.fullName || "").toLowerCase().includes(searchQuery.toLowerCase()))
                         .map((item) => {
                           const records = item.attendance || {};
@@ -1212,6 +1218,21 @@ const Attendance = () => {
                                   <span className="px-2 py-1 rounded bg-amber-50 text-amber-700 text-[10px] font-bold" title="Leave">{l}</span>
                                   <span className="px-2 py-1 rounded bg-indigo-50 text-indigo-700 text-[10px] font-bold" title="Late">{t}</span>
                                 </div>
+                              </td>
+
+                              {/* Analytics Action Button */}
+                              <td className="px-4 py-4 text-center bg-white border-l border-gray-100">
+                                <button
+                                  title="View Full Analytics"
+                                  onClick={() =>
+                                    navigate(
+                                      `/reports/attendance/analysis/staff/${item.teacher?._id}`
+                                    )
+                                  }
+                                  className="p-2 rounded-xl text-gray-300 hover:text-orange-600 hover:bg-orange-50 transition-all active:scale-90"
+                                >
+                                  <BarChart2 size={16} />
+                                </button>
                               </td>
                             </tr>
                           );

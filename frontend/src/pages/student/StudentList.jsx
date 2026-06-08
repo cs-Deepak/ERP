@@ -40,7 +40,13 @@ const StudentList = () => {
   const [filterClass, setFilterClass] = useState("all");
   const [filterSection, setFilterSection] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [viewMode, setViewMode] = useState("list"); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem("student_list_view_mode") || "list";
+  }); // 'list' or 'grid'
+
+  useEffect(() => {
+    localStorage.setItem("student_list_view_mode", viewMode);
+  }, [viewMode]);
   
   // Selection State for Bulk Actions
   const [selectedIds, setSelectedIds] = useState([]);
@@ -815,7 +821,7 @@ const StudentList = () => {
                           </p>
                         </td>
                         <td className="px-8 py-4.5 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                          <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300">
                             <button
                               onClick={() => navigate(`/students/${student.studentId || student._id}`)}
                               className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
@@ -1069,7 +1075,11 @@ const StudentList = () => {
               className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-xs font-bold text-white rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer border border-transparent"
             >
               <Contact2 size={14} />
-              <span>Generate Bulk ID Cards</span>
+              <span>
+                {selectedIds.length === 1
+                  ? "Generate ID Card"
+                  : `Generate Bulk ID Cards (${selectedIds.length})`}
+              </span>
             </button>
             <button
               onClick={() => setSelectedIds([])}
